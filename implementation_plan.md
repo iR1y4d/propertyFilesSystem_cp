@@ -75,6 +75,20 @@ graph TD
 | Access Rules | Admin: full CRUD. Employee: read-only (restricted view on `محجوز` files) |
 | Constraints | `propertyFileNumber` is the business key. Soft delete only (add `deletedAt` column). |
 
+### 2.3.1 M3a — Property Image Management Sub-Module
+
+| Aspect | Detail |
+|--------|--------|
+| Purpose | Manage property file images with automatic folder organization |
+| Storage | Filesystem: `server/uploads/properties/{propertyFileNumber}/` — each property gets its own folder |
+| Image DB | `property_images` table tracks metadata (filename, path, size, MIME type, uploader) |
+| Upload | Admin uploads via multipart form; images auto-placed in correct folder by file number |
+| Bulk Upload | Admin places images named `{fileNumber}_{index}.{ext}` in `uploads/bulk/`; system processes and sorts automatically |
+| Viewing | Both roles can view images; `محجوز` restrictions apply |
+| Deletion | Admin only; deletes file from disk + DB record |
+| Constraints | Max 5MB per image, max 10 per upload. JPEG, PNG, WebP only |
+
+
 ### 2.4 M4 — Request/Approval Workflow Module
 
 | Aspect | Detail |

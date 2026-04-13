@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FiPlus, FiEdit } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiImage } from 'react-icons/fi';
 import { useAuth } from '../hooks/useAuth';
 import { ROLES } from '../constants';
 import { getProperties, searchProperties, deleteProperty } from '../api/propertyApi';
@@ -13,6 +13,7 @@ import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
 import PropertyForm from '../components/forms/PropertyForm';
 import EditRequestForm from '../components/forms/EditRequestForm';
+import ImageGallery from '../components/common/ImageGallery';
 import { toast } from 'react-hot-toast';
 
 const Properties = () => {
@@ -27,6 +28,8 @@ const Properties = () => {
   const [propertyToDelete, setPropertyToDelete] = useState(null);
   const [isEditRequestOpen, setIsEditRequestOpen] = useState(false);
   const [editRequestProperty, setEditRequestProperty] = useState(null);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [imageProperty, setImageProperty] = useState(null);
 
   const { data, loading, pagination, refetch } = useFetch(
     searchTerm ? searchProperties : getProperties,
@@ -53,6 +56,11 @@ const Properties = () => {
     setIsEditRequestOpen(true);
   };
 
+  const handleViewImages = (property) => {
+    setImageProperty(property);
+    setIsImageModalOpen(true);
+  };
+
   const confirmDelete = async () => {
     try {
       await deleteProperty(propertyToDelete.property_file_number);
@@ -73,6 +81,19 @@ const Properties = () => {
     { key: 'location', label: 'الموقع' },
     { key: 'area', label: 'المساحة' },
     { key: 'status', label: 'الحالة', render: (row) => <Badge status={row.status} /> },
+    {
+      key: 'images',
+      label: 'الصور',
+      render: (row) => (
+        <button
+          onClick={() => handleViewImages(row)}
+          className="flex items-center gap-1 text-blue-600 hover:text-blue-800 transition-colors"
+          title="عرض الصور"
+        >
+          <FiImage size={18} />
+        </button>
+      ),
+    },
     {
       key: 'actions',
       label: 'إجراءات',
@@ -164,6 +185,23 @@ const Properties = () => {
                 onSuccess={() => { setIsEditRequestOpen(false); refetch(); }}
                 onCancel={() => setIsEditRequestOpen(false)}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Gallery Modal */}
+      {isImageModalOpen && imageProperty && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
+              <h2 className="text-xl font-bold text-gray-800">
+                صور العقار رقم {imageProperty.property_file_number}
+              </h2>
+              <button onClick={() => setIsImageModalOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+            </div>
+            <div className="p-6">
+              <ImageGallery propertyFileNumber={imageProperty.property_file_number} />
             </div>
           </div>
         </div>
