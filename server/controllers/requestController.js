@@ -5,7 +5,16 @@ const requestService = require('../services/requestService');
  */
 const submitRequest = async (req, res, next) => {
   try {
-    const result = await requestService.submitRequest(req.user.userId, req.body);
+    // Parse fields that may come as strings from multipart form data
+    let body = { ...req.body };
+    if (typeof body.newData === 'string') {
+      body.newData = JSON.parse(body.newData);
+    }
+    if (typeof body.propertyFileNumber === 'string') {
+      body.propertyFileNumber = parseInt(body.propertyFileNumber, 10);
+    }
+
+    const result = await requestService.submitRequest(req.user.userId, body, req.files);
     res.status(201).json({
       success: true,
       data: result,

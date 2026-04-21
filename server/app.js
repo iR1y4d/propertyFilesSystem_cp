@@ -34,6 +34,9 @@ app.use('/api/v1', require('./routes/image.routes.js'));
 // Serve uploaded images (static files)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Serve pending images (for admin review of employee uploads)
+app.use('/uploads/pending', express.static(path.join(__dirname, 'uploads', 'pending')));
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'UP', timestamp: new Date() });

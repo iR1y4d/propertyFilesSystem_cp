@@ -87,10 +87,17 @@ const Properties = () => {
       render: (row) => (
         <button
           onClick={() => handleViewImages(row)}
-          className="flex items-center gap-1 text-blue-600 hover:text-blue-800 transition-colors"
-          title="عرض الصور"
+          className={`flex items-center gap-1 transition-colors ${
+            row.has_images
+              ? 'text-blue-600 hover:text-blue-800'
+              : 'text-gray-300 hover:text-gray-500'
+          }`}
+          title={row.has_images ? 'عرض الصور' : 'لا توجد صور'}
         >
           <FiImage size={18} />
+          {!row.has_images && (
+            <span className="text-xs text-gray-400">—</span>
+          )}
         </button>
       ),
     },
@@ -201,7 +208,7 @@ const Properties = () => {
               <button onClick={() => setIsImageModalOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
             </div>
             <div className="p-6">
-              <ImageGallery propertyFileNumber={imageProperty.property_file_number} />
+              <ImageGallery propertyFileNumber={imageProperty.property_file_number} isAdmin={isAdmin} />
             </div>
           </div>
         </div>

@@ -1,16 +1,18 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiArrowRight, FiCheckCircle, FiXCircle, FiInfo } from 'react-icons/fi';
 import useFetch from '../hooks/useFetch';
-import { getRequest, approveRequest, rejectRequest } from '../api/requestApi';
+import { getRequest, approveRequest, rejectRequest, getRequestImages } from '../api/requestApi';
 import { useAuth } from '../hooks/useAuth';
 import { ROLES } from '../constants';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import Spinner from '../components/common/Spinner';
 import Modal from '../components/common/Modal';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { formatDate } from '../utils/helpers';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const RequestDetail = () => {
   const { id } = useParams();
@@ -23,6 +25,27 @@ const RequestDetail = () => {
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Pending images state
+  const [requestImages, setRequestImages] = useState([]);
+  const [imagesLoading, setImagesLoading] = useState(false);
+
+  // Fetch pending images for admin review
+  useEffect(() => {
+    if (!id || !isAdmin) return;
+    const fetchImages = async () => {
+      setImagesLoading(true);
+      try {
+        const res = await getRequestImages(id);
+        setRequestImages(res.data?.data || []);
+      } catch {
+        setRequestImages([]);
+      } finally {
+        setImagesLoading(false);
+      }
+    };
+    fetchImages();
+  }, [id, isAdmin]);
 
   const handleApprove = async () => {
     setActionLoading(true);
@@ -133,6 +156,38 @@ const RequestDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Pending Images Section */}
+      {isAdmin && requestImages.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-100 bg-gray-50">
+            <h2 className="text-lg font-bold text-gray-800">
+              📷 صور مرفقة بالطلب ({requestImages.length})
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {isPending ? 'سيتم نقل هذه الصور لمجلد العقار عند القبول' : 'صور مرفقة'}
+            </p>
+          </div>
+          <div className="p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {requestImages.map((img, i) => (
+              <div key={i} className="aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-50 hover:shadow-md transition-shadow">
+                <img
+                  src={`${API_BASE}${img.url}`}
+                  alt={img.filename}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {isAdmin && imagesLoading && (
+        <div className="flex justify-center py-4">
+          <Spinner />
+        </div>
+      )}
 
       <Modal
         isOpen={isApproveModalOpen}

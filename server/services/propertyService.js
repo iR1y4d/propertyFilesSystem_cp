@@ -1,5 +1,6 @@
 const propertyModel = require('../models/propertyModel');
 const logModel = require('../models/logModel');
+const imageService = require('./imageService');
 const { LOG_ACTIONS, ROLES, PROPERTY_STATUS } = require('../config/constants');
 
 /**
@@ -22,8 +23,14 @@ const listProperties = async (user, { page = 1, limit = 20, status, location, pr
     return p;
   });
 
+  // Enrich properties with has_images flag from filesystem
+  const enrichedProperties = filteredProperties.map(p => {
+    if (p.is_restricted) return p;
+    return { ...p, has_images: imageService.hasImages(p.property_file_number) };
+  });
+
   return {
-    properties: filteredProperties,
+    properties: enrichedProperties,
     pagination: {
       totalCount,
       totalPages: Math.ceil(totalCount / limit),

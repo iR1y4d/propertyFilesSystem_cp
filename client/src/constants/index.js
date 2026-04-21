@@ -25,6 +25,7 @@ export const LOG_ACTIONS = {
   REQUEST: 'طلب',
   APPROVE: 'موافقة',
   REJECT: 'رفض',
+  DELETE_IMAGE: 'حذف_صور',
 };
 
 export const STATUS_COLORS = {
@@ -45,6 +46,7 @@ export const STATUS_COLORS = {
   'طلب': 'bg-indigo-100 text-indigo-800',
   'موافقة': 'bg-teal-100 text-teal-800',
   'رفض': 'bg-rose-100 text-rose-800',
+  'حذف_صور': 'bg-orange-100 text-orange-800',
 };
 
 export const API_BASE = '/api/v1';

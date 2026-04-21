@@ -1,13 +1,16 @@
 const requestModel = require('../models/requestModel');
 const propertyModel = require('../models/propertyModel');
 const logModel = require('../models/logModel');
+const imageService = require('./imageService');
 const { getClient } = require('../config/db');
 const { LOG_ACTIONS, REQUEST_STATUS } = require('../config/constants');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * Submit a new change request
  */
-const submitRequest = async (userId, data) => {
+const submitRequest = async (userId, data, files = []) => {
   const { propertyFileNumber, requestType, requestDescription, newData } = data;
 
   // 1. Fetch current property for snapshot
@@ -26,7 +29,16 @@ const submitRequest = async (userId, data) => {
     requestType
   });
 
-  // 3. Audit log
+  // 3. If images were uploaded, rename temp folder to use request ID
+  if (files && files.length > 0 && files[0]?.destination) {
+    const tempDir = files[0].destination;
+    const pendingDir = path.join(__dirname, '..', 'uploads', 'pending', String(request.request_id));
+    if (fs.existsSync(tempDir)) {
+      fs.renameSync(tempDir, pendingDir);
+    }
+  }
+
+  // 4. Audit log
   await logModel.createLog({
     userId,
     action: LOG_ACTIONS.REQUEST,
@@ -56,7 +68,7 @@ const approveRequest = async (adminUserId, requestId) => {
 
     // 2. Apply mutation to property
     if (request.request_type === 'إضافة') {
-      await propertyModel.create(request.new_data, client);
+      await propertyModel.create({ ...request.new_data, propertyFileNumber: request.property_file_number }, client);
     } else if (request.request_type === 'تعديل') {
       await propertyModel.update(request.property_file_number, request.new_data, client);
     } else if (request.request_type === 'حذف') {
@@ -73,6 +85,10 @@ const approveRequest = async (adminUserId, requestId) => {
     );
 
     await client.query('COMMIT');
+
+    // 5. Move pending images to final location (outside transaction — filesystem ops)
+    imageService.movePendingImages(requestId, request.property_file_number);
+
     return { success: true, message: 'تم قبول الطلب وتطبيق التغييرات بنجاح' };
   } catch (err) {
     await client.query('ROLLBACK');
@@ -94,6 +110,9 @@ const rejectRequest = async (adminUserId, requestId) => {
   }
 
   const request = await requestModel.updateStatus(null, requestId, REQUEST_STATUS.REJECTED);
+
+  // Delete pending images
+  imageService.deletePendingImages(requestId);
 
   // Audit log
   await logModel.createLog({

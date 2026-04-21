@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import Input from '../common/Input';
 import Button from '../common/Button';
-import { createProperty, updateProperty } from '../../api/propertyApi';
+import ImageUploader from '../common/ImageUploader';
+import { createProperty, updateProperty, uploadPropertyImages } from '../../api/propertyApi';
 import { toast } from 'react-hot-toast';
 import { PROPERTY_STATUS } from '../../constants';
 
@@ -17,6 +18,7 @@ const PropertyForm = ({ initialData, onSuccess, onCancel }) => {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [selectedImages, setSelectedImages] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,7 +30,7 @@ const PropertyForm = ({ initialData, onSuccess, onCancel }) => {
     const newErrors = {};
     if (!formData.propertyFileNumber) newErrors.propertyFileNumber = 'رقم الملف مطلوب';
     if (!formData.ownerName || formData.ownerName.length < 3) newErrors.ownerName = 'اسم المالك يجب أن يكون 3 حروف على الأقل';
-    if (!formData.nationalNumber || formData.nationalNumber.length !== 10) newErrors.nationalNumber = 'الرقم الوطني يجب أن يكون 10 أرقام';
+    if (!formData.nationalNumber || String(formData.nationalNumber).length !== 10) newErrors.nationalNumber = 'الرقم الوطني يجب أن يكون 10 أرقام';
     if (!formData.location) newErrors.location = 'الموقع مطلوب';
     if (!formData.area) newErrors.area = 'المساحة مطلوبة';
     
@@ -50,9 +52,21 @@ const PropertyForm = ({ initialData, onSuccess, onCancel }) => {
     try {
       if (isEdit) {
         await updateProperty(initialData.property_file_number, payload);
+        // Upload images if any selected
+        if (selectedImages.length > 0) {
+          const imgFormData = new FormData();
+          selectedImages.forEach(file => imgFormData.append('images', file));
+          await uploadPropertyImages(initialData.property_file_number, imgFormData);
+        }
         toast.success('تم تحديث بيانات العقار بنجاح');
       } else {
         await createProperty(payload);
+        // Upload images if any selected
+        if (selectedImages.length > 0) {
+          const imgFormData = new FormData();
+          selectedImages.forEach(file => imgFormData.append('images', file));
+          await uploadPropertyImages(payload.propertyFileNumber, imgFormData);
+        }
         toast.success('تم إضافة العقار بنجاح');
       }
       onSuccess();
@@ -121,6 +135,12 @@ const PropertyForm = ({ initialData, onSuccess, onCancel }) => {
             <option value={PROPERTY_STATUS.RESERVED}>محجوز</option>
           </select>
         </div>
+      </div>
+
+      {/* Image Upload Section */}
+      <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <label className="text-sm font-bold text-gray-700 mb-3 block">صور العقار (اختياري)</label>
+        <ImageUploader onFilesSelected={setSelectedImages} />
       </div>
 
       <div className="flex gap-3 justify-end mt-8 border-t border-gray-100 pt-6">

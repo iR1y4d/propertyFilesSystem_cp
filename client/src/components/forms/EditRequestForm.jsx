@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Input from '../common/Input';
 import Button from '../common/Button';
+import ImageUploader from '../common/ImageUploader';
 import { submitRequest } from '../../api/requestApi';
 import { toast } from 'react-hot-toast';
 import { PROPERTY_STATUS } from '../../constants';
@@ -17,6 +18,7 @@ const EditRequestForm = ({ property, onSuccess, onCancel }) => {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [selectedImages, setSelectedImages] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,7 +41,7 @@ const EditRequestForm = ({ property, onSuccess, onCancel }) => {
     e.preventDefault();
     if (!validate()) return;
 
-    const payload = {
+    const requestData = {
       propertyFileNumber: parseInt(formData.propertyFileNumber, 10),
       requestType: 'تعديل',
       requestDescription: formData.requestDescription,
@@ -54,6 +56,20 @@ const EditRequestForm = ({ property, onSuccess, onCancel }) => {
 
     setLoading(true);
     try {
+      let payload;
+
+      if (selectedImages.length > 0) {
+        // Build FormData when images are attached
+        payload = new FormData();
+        payload.append('propertyFileNumber', requestData.propertyFileNumber);
+        payload.append('requestType', requestData.requestType);
+        payload.append('requestDescription', requestData.requestDescription);
+        payload.append('newData', JSON.stringify(requestData.newData));
+        selectedImages.forEach(file => payload.append('images', file));
+      } else {
+        payload = requestData;
+      }
+
       await submitRequest(payload);
       toast.success('تم تقديم طلب التعديل بنجاح');
       onSuccess();
@@ -138,6 +154,12 @@ const EditRequestForm = ({ property, onSuccess, onCancel }) => {
           }`}
         ></textarea>
         {errors.requestDescription && <p className="mt-1 text-xs text-danger">{errors.requestDescription}</p>}
+      </div>
+
+      {/* Image Upload Section */}
+      <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <h3 className="text-sm font-bold text-gray-700 mb-3">إرفاق صور (اختياري)</h3>
+        <ImageUploader onFilesSelected={setSelectedImages} />
       </div>
 
       <div className="flex gap-3 justify-end mt-8 border-t border-gray-100 pt-6">

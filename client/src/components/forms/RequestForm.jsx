@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Input from '../common/Input';
 import Button from '../common/Button';
+import ImageUploader from '../common/ImageUploader';
 import { submitRequest } from '../../api/requestApi';
 import { toast } from 'react-hot-toast';
 // No status constants needed here as they are strings in the JSX
@@ -20,6 +21,7 @@ const RequestForm = ({ onSuccess, onCancel }) => {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [selectedImages, setSelectedImages] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -51,13 +53,26 @@ const RequestForm = ({ onSuccess, onCancel }) => {
     e.preventDefault();
     if (!validate()) return;
 
-    const payload = {
-      ...formData,
-      propertyFileNumber: parseInt(formData.propertyFileNumber, 10),
-    };
-
     setLoading(true);
     try {
+      let payload;
+
+      if (selectedImages.length > 0) {
+        // Build FormData when images are attached
+        payload = new FormData();
+        payload.append('propertyFileNumber', parseInt(formData.propertyFileNumber, 10));
+        payload.append('requestType', formData.requestType);
+        payload.append('requestDescription', formData.requestDescription);
+        payload.append('newData', JSON.stringify(formData.newData));
+        selectedImages.forEach(file => payload.append('images', file));
+      } else {
+        // Plain JSON when no images
+        payload = {
+          ...formData,
+          propertyFileNumber: parseInt(formData.propertyFileNumber, 10),
+        };
+      }
+
       await submitRequest(payload);
       toast.success('تم تقديم الطلب بنجاح وهو الآن في انتظار موافقة المسؤول');
       onSuccess();
@@ -138,6 +153,14 @@ const RequestForm = ({ onSuccess, onCancel }) => {
               onChange={handleChange}
             />
           </div>
+        </div>
+      )}
+
+      {/* Image Upload — available for إضافة and تعديل */}
+      {(formData.requestType === 'إضافة' || formData.requestType === 'تعديل') && (
+        <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <h3 className="text-sm font-bold text-gray-800 mb-3">صور العقار (اختياري)</h3>
+          <ImageUploader onFilesSelected={setSelectedImages} />
         </div>
       )}
 

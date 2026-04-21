@@ -39,6 +39,7 @@ module.exports = {
     REQUEST: 'طلب',
     APPROVE: 'موافقة',
     REJECT: 'رفض',
+    DELETE_IMAGE: 'حذف_صور',
   },
 
   // Security
