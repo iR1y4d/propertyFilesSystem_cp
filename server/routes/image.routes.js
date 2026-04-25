@@ -39,7 +39,7 @@ router.delete(
 // Get pending images for a request (Admin review)
 router.get(
   '/requests/:id/images',
-  authorize(ROLES.ADMIN),
+  authorize(ROLES.ADMIN, ROLES.EMPLOYEE),
   imageController.getPendingImages
 );
 

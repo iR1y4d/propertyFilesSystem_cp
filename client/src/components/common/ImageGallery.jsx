@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { FiX, FiZoomIn, FiImage, FiTrash2 } from 'react-icons/fi';
+import { FiX, FiZoomIn, FiImage, FiTrash2, FiCheckSquare, FiSquare } from 'react-icons/fi';
 import { getPropertyImages, uploadPropertyImages, deletePropertyImage } from '../../api/propertyApi';
+import { submitRequest } from '../../api/requestApi';
 import ImageUploader from './ImageUploader';
 import Modal from './Modal';
 import Spinner from './Spinner';
@@ -22,11 +23,20 @@ const ImageGallery = ({ propertyFileNumber, isAdmin = false }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // Employee delete request state
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedImagesForDeletion, setSelectedImagesForDeletion] = useState([]);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [requestDescription, setRequestDescription] = useState('');
+  const [submittingRequest, setSubmittingRequest] = useState(false);
+
   const fetchImages = async () => {
     try {
       setLoading(true);
       const res = await getPropertyImages(propertyFileNumber);
       setImages(res.data?.data || []);
+      setSelectedImagesForDeletion([]);
+      setSelectionMode(false);
     } catch {
       setImages([]);
     } finally {
@@ -79,6 +89,40 @@ const ImageGallery = ({ propertyFileNumber, isAdmin = false }) => {
     }
   };
 
+  // Employee: toggle selection
+  const toggleImageSelection = (filename) => {
+    setSelectedImagesForDeletion(prev => 
+      prev.includes(filename) 
+        ? prev.filter(f => f !== filename)
+        : [...prev, filename]
+    );
+  };
+
+  // Employee: submit delete request
+  const handleSubmitDeleteRequest = async () => {
+    if (selectedImagesForDeletion.length === 0) return;
+    setSubmittingRequest(true);
+    try {
+      await submitRequest({
+        propertyFileNumber: parseInt(propertyFileNumber, 10),
+        requestType: 'حذف_صور',
+        requestDescription: requestDescription || 'طلب حذف صور',
+        newData: {
+          imagesToDelete: selectedImagesForDeletion
+        }
+      });
+      toast.success('تم تقديم طلب حذف الصور بنجاح');
+      setIsRequestModalOpen(false);
+      setSelectionMode(false);
+      setSelectedImagesForDeletion([]);
+      setRequestDescription('');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'فشل إرسال طلب الحذف');
+    } finally {
+      setSubmittingRequest(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -116,44 +160,103 @@ const ImageGallery = ({ propertyFileNumber, isAdmin = false }) => {
         </div>
       ) : (
         <>
-          <p className="text-sm text-gray-500 mb-3">{images.length} صورة</p>
+          <div className="flex justify-between items-center mb-3">
+            <p className="text-sm text-gray-500">{images.length} صورة</p>
+            
+            {/* Employee: Selection tools */}
+            {!isAdmin && (
+              <div className="flex gap-2">
+                {selectionMode ? (
+                  <>
+                    <button 
+                      onClick={() => { setSelectionMode(false); setSelectedImagesForDeletion([]); }}
+                      className="px-3 py-1.5 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
+                    >
+                      إلغاء
+                    </button>
+                    <button 
+                      onClick={() => setIsRequestModalOpen(true)}
+                      disabled={selectedImagesForDeletion.length === 0}
+                      className="px-3 py-1.5 text-xs bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 transition-colors"
+                    >
+                      طلب حذف ({selectedImagesForDeletion.length})
+                    </button>
+                  </>
+                ) : (
+                  <button 
+                    onClick={() => setSelectionMode(true)}
+                    className="px-3 py-1.5 text-xs bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-100 transition-colors"
+                  >
+                    طلب حذف صور
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Image Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {images.map((image, index) => (
-              <div
-                key={index}
-                className="group relative aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-50 hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => setLightboxImage(image)}
-              >
-                <img
-                  src={`${API_BASE}${image.url}`}
-                  alt={image.filename}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                  loading="lazy"
-                />
-                {/* Hover overlay */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  <div className="p-2 bg-white/90 rounded-full text-gray-700">
-                    <FiZoomIn size={18} />
+            {images.map((image, index) => {
+              const isSelected = selectedImagesForDeletion.includes(image.filename);
+              return (
+                <div
+                  key={index}
+                  className={`group relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                    isSelected ? 'border-red-500 shadow-sm' : 'border-gray-200 bg-gray-50 hover:shadow-md'
+                  }`}
+                  onClick={() => {
+                    if (selectionMode) {
+                      toggleImageSelection(image.filename);
+                    } else {
+                      setLightboxImage(image);
+                    }
+                  }}
+                >
+                  <img
+                    src={`${API_BASE}${image.url}`}
+                    alt={image.filename}
+                    className={`w-full h-full object-cover transition-transform ${isSelected ? 'opacity-80' : 'group-hover:scale-105'}`}
+                    loading="lazy"
+                  />
+                  
+                  {/* Selection Checkbox (Employee Mode) */}
+                  {selectionMode && (
+                    <div className="absolute top-2 right-2 z-20">
+                      {isSelected ? (
+                        <FiCheckSquare className="text-red-500 bg-white" size={20} />
+                      ) : (
+                        <FiSquare className="text-gray-300 bg-black/20 rounded" size={20} />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Hover overlay (Normal Mode) */}
+                  {!selectionMode && (
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <div className="p-2 bg-white/90 rounded-full text-gray-700">
+                        <FiZoomIn size={18} />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Admin: Delete button */}
+                  {isAdmin && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); confirmDeleteImage(image); }}
+                      className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      title="حذف الصورة مباشرة"
+                    >
+                      <FiTrash2 size={14} />
+                    </button>
+                  )}
+
+                  {/* Filename at bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-2 py-1 truncate opacity-0 group-hover:opacity-100 transition-opacity">
+                    {image.filename}
                   </div>
                 </div>
-                {/* Admin: Delete button */}
-                {isAdmin && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); confirmDeleteImage(image); }}
-                    className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                    title="حذف الصورة"
-                  >
-                    <FiTrash2 size={14} />
-                  </button>
-                )}
-                {/* Filename at bottom */}
-                <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-2 py-1 truncate opacity-0 group-hover:opacity-100 transition-opacity">
-                  {image.filename}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
@@ -182,7 +285,7 @@ const ImageGallery = ({ propertyFileNumber, isAdmin = false }) => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Admin Delete Confirmation Modal */}
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => { setIsDeleteModalOpen(false); setImageToDelete(null); }}
@@ -193,6 +296,29 @@ const ImageGallery = ({ propertyFileNumber, isAdmin = false }) => {
         variant="danger"
         loading={deleting}
       />
+
+      {/* Employee Delete Request Modal */}
+      <Modal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+        onConfirm={handleSubmitDeleteRequest}
+        title="طلب حذف صور"
+        message={`هل أنت متأكد من رغبتك في تقديم طلب لحذف ${selectedImagesForDeletion.length} صورة؟`}
+        confirmText="إرسال الطلب"
+        variant="danger"
+        loading={submittingRequest}
+      >
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">سبب الحذف (اختياري)</label>
+          <textarea
+            value={requestDescription}
+            onChange={(e) => setRequestDescription(e.target.value)}
+            className="w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-red-500 focus:border-red-500"
+            rows={3}
+            placeholder="يرجى توضيح سبب الحذف..."
+          />
+        </div>
+      </Modal>
     </div>
   );
 };

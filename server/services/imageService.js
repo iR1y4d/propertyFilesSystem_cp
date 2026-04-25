@@ -68,8 +68,13 @@ const deleteImage = (propertyFileNumber, filename) => {
     return false;
   }
 
-  fs.unlinkSync(filePath);
-  return true;
+  try {
+    fs.unlinkSync(filePath);
+    return true;
+  } catch (err) {
+    console.error(`[deleteImage] Error deleting file ${filePath}:`, err.message);
+    return false;
+  }
 };
 
 /**

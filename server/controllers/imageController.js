@@ -61,16 +61,21 @@ const uploadImages = async (req, res, next) => {
 const deleteImage = async (req, res, next) => {
   try {
     const { fileNumber, filename } = req.params;
+    console.log('--- DELETE IMAGE ATTEMPT ---');
+    console.log('fileNumber:', fileNumber);
+    console.log('filename:', filename);
 
     // Verify property exists
     await propertyService.getProperty(req.user, fileNumber);
+    console.log('Property verified');
 
     const deleted = imageService.deleteImage(fileNumber, filename);
+    console.log('Deleted status:', deleted);
 
     if (!deleted) {
-      return res.status(404).json({
+      return res.status(400).json({
         success: false,
-        message: 'الصورة غير موجودة'
+        message: 'تعذر حذف الصورة، قد تكون غير موجودة أو قيد الاستخدام'
       });
     }
 

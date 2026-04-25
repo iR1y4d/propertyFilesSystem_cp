@@ -3,7 +3,7 @@ import { FiArrowRight, FiCheckCircle, FiXCircle, FiInfo } from 'react-icons/fi';
 import useFetch from '../hooks/useFetch';
 import { getRequest, approveRequest, rejectRequest, getRequestImages } from '../api/requestApi';
 import { useAuth } from '../hooks/useAuth';
-import { ROLES } from '../constants';
+import { ROLES, REQUEST_TYPE } from '../constants';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import Spinner from '../components/common/Spinner';
@@ -32,7 +32,22 @@ const RequestDetail = () => {
 
   // Fetch pending images for admin review
   useEffect(() => {
-    if (!id || !isAdmin) return;
+    if (!id || !request) return;
+    
+    // If it's a delete images request, we don't fetch pending images from temp folder,
+    // we use the filenames listed in new_data
+    if (request.request_type === REQUEST_TYPE.DELETE_IMAGE) {
+      if (request.new_data?.imagesToDelete) {
+        const imagesToDeleteUrls = request.new_data.imagesToDelete.map(filename => ({
+          filename,
+          url: `/uploads/properties/${request.property_file_number}/${filename}`
+        }));
+        setRequestImages(imagesToDeleteUrls);
+      }
+      return;
+    }
+
+    // Otherwise fetch pending uploaded images
     const fetchImages = async () => {
       setImagesLoading(true);
       try {
@@ -45,7 +60,7 @@ const RequestDetail = () => {
       }
     };
     fetchImages();
-  }, [id, isAdmin]);
+  }, [id, isAdmin, request]);
 
   const handleApprove = async () => {
     setActionLoading(true);
@@ -80,6 +95,7 @@ const RequestDetail = () => {
   if (!request) return null;
 
   const isPending = request.status === 'في الانتظار';
+  const isDeleteImagesRequest = request.request_type === REQUEST_TYPE.DELETE_IMAGE;
 
   // Helper to render diff row
   const DiffRow = ({ label, oldVal, newVal }) => {
@@ -126,7 +142,9 @@ const RequestDetail = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50">
           <div>
-            <h1 className="text-xl font-bold text-gray-800">تفاصيل الطلب #{request.request_id}</h1>
+            <h1 className="text-xl font-bold text-gray-800">
+              {isDeleteImagesRequest ? 'طلب حذف صور' : 'تفاصيل الطلب'} #{request.request_id}
+            </h1>
             <p className="text-sm text-gray-500">مقدم من: {request.requester_name} في {formatDate(request.created_at)}</p>
           </div>
           <Badge status={request.status} />
@@ -137,40 +155,50 @@ const RequestDetail = () => {
             <FiInfo className="mt-1 flex-shrink-0" />
             <div>
               <p className="font-bold text-sm">وصف الطلب:</p>
-              <p className="text-sm">{request.request_description}</p>
+              <p className="text-sm">{request.request_description || 'لا يوجد وصف'}</p>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
-              <div>الحقل</div>
-              <div>القيمة الحالية</div>
-              <div>القيمة المقترحة</div>
+          {!isDeleteImagesRequest && (
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                <div>الحقل</div>
+                <div>القيمة الحالية</div>
+                <div>القيمة المقترحة</div>
+              </div>
+              
+              <DiffRow label="اسم المالك" oldVal={request.old_data?.owner_name} newVal={request.new_data?.ownerName} />
+              <DiffRow label="الرقم الوطني" oldVal={request.old_data?.national_number} newVal={request.new_data?.nationalNumber} />
+              <DiffRow label="الموقع" oldVal={request.old_data?.location} newVal={request.new_data?.location} />
+              <DiffRow label="المساحة" oldVal={request.old_data?.area} newVal={request.new_data?.area} />
+              <DiffRow label="الحالة" oldVal={request.old_data?.status} newVal={request.new_data?.status} />
             </div>
-            
-            <DiffRow label="اسم المالك" oldVal={request.old_data?.owner_name} newVal={request.new_data?.ownerName} />
-            <DiffRow label="الرقم الوطني" oldVal={request.old_data?.national_number} newVal={request.new_data?.nationalNumber} />
-            <DiffRow label="الموقع" oldVal={request.old_data?.location} newVal={request.new_data?.location} />
-            <DiffRow label="المساحة" oldVal={request.old_data?.area} newVal={request.new_data?.area} />
-            <DiffRow label="الحالة" oldVal={request.old_data?.status} newVal={request.new_data?.status} />
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Pending Images Section */}
-      {isAdmin && requestImages.length > 0 && (
+      {/* Images Section */}
+      {requestImages.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-6 border-b border-gray-100 bg-gray-50">
-            <h2 className="text-lg font-bold text-gray-800">
-              📷 صور مرفقة بالطلب ({requestImages.length})
+            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              📷 
+              {isDeleteImagesRequest ? (
+                <span className="text-red-600">صور مطلوب حذفها ({requestImages.length})</span>
+              ) : (
+                <span>صور مرفقة بالطلب ({requestImages.length})</span>
+              )}
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              {isPending ? 'سيتم نقل هذه الصور لمجلد العقار عند القبول' : 'صور مرفقة'}
+              {isDeleteImagesRequest 
+                ? (isPending ? 'سيتم حذف هذه الصور نهائياً من ملف العقار عند القبول' : 'الصور المطلوبة للحذف')
+                : (isPending ? 'سيتم نقل هذه الصور لمجلد العقار عند القبول' : 'صور مرفقة')
+              }
             </p>
           </div>
           <div className="p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {requestImages.map((img, i) => (
-              <div key={i} className="aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-50 hover:shadow-md transition-shadow">
+              <div key={i} className={`aspect-square rounded-lg overflow-hidden border-2 bg-gray-50 hover:shadow-md transition-shadow ${isDeleteImagesRequest ? 'border-red-300' : 'border-gray-200'}`}>
                 <img
                   src={`${API_BASE}${img.url}`}
                   alt={img.filename}
@@ -194,8 +222,11 @@ const RequestDetail = () => {
         onClose={() => setIsApproveModalOpen(false)}
         onConfirm={handleApprove}
         title="قبول الطلب"
-        message="هل أنت متأكد من قبول هذا الطلب؟ سيتم تحديث بيانات العقار فوراً."
-        confirmText="قبول وتحديث"
+        message={isDeleteImagesRequest 
+          ? "هل أنت متأكد من قبول هذا الطلب؟ سيتم حذف الصور المحددة نهائياً من النظام ولن يمكن استعادتها."
+          : "هل أنت متأكد من قبول هذا الطلب؟ سيتم تحديث بيانات العقار فوراً."
+        }
+        confirmText={isDeleteImagesRequest ? "قبول وحذف الصور" : "قبول وتحديث"}
         loading={actionLoading}
       />
 
@@ -204,7 +235,10 @@ const RequestDetail = () => {
         onClose={() => setIsRejectModalOpen(false)}
         onConfirm={handleReject}
         title="رفض الطلب"
-        message="هل أنت متأكد من رفض هذا الطلب؟ لن يتم إجراء أي تغييرات على بيانات العقار."
+        message={isDeleteImagesRequest
+          ? "هل أنت متأكد من رفض هذا الطلب؟ سيتم الاحتفاظ بالصور ولن يتم حذفها."
+          : "هل أنت متأكد من رفض هذا الطلب؟ لن يتم إجراء أي تغييرات على بيانات العقار."
+        }
         confirmText="رفض"
         variant="danger"
         loading={actionLoading}

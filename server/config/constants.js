@@ -19,6 +19,7 @@ module.exports = {
     ADD: 'إضافة',
     EDIT: 'تعديل',
     DELETE: 'حذف',
+    DELETE_IMAGE: 'حذف_صور',
   },
 
   // Request statuses

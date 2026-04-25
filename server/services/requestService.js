@@ -73,6 +73,8 @@ const approveRequest = async (adminUserId, requestId) => {
       await propertyModel.update(request.property_file_number, request.new_data, client);
     } else if (request.request_type === 'حذف') {
       await propertyModel.softDelete(request.property_file_number, client);
+    } else if (request.request_type === 'حذف_صور') {
+      // No property mutation needed, handled outside transaction
     }
 
     // 3. Update request status
@@ -86,8 +88,16 @@ const approveRequest = async (adminUserId, requestId) => {
 
     await client.query('COMMIT');
 
-    // 5. Move pending images to final location (outside transaction — filesystem ops)
-    imageService.movePendingImages(requestId, request.property_file_number);
+    // 5. Post-transaction file operations
+    if (request.request_type === 'حذف_صور') {
+      const imagesToDelete = request.new_data?.imagesToDelete || [];
+      imagesToDelete.forEach(filename => {
+        imageService.deleteImage(request.property_file_number, filename);
+      });
+    } else {
+      // Move pending images to final location (outside transaction — filesystem ops)
+      imageService.movePendingImages(requestId, request.property_file_number);
+    }
 
     return { success: true, message: 'تم قبول الطلب وتطبيق التغييرات بنجاح' };
   } catch (err) {

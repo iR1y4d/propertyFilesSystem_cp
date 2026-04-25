@@ -24,12 +24,12 @@ app.use(cookieParser()); // Parse cookies
 
 // Routes
 app.use('/api/v1/auth', require('./routes/auth.routes.js'));
+app.use('/api/v1', require('./routes/image.routes.js'));
 app.use('/api/v1/properties', require('./routes/property.routes.js'));
 app.use('/api/v1/requests', require('./routes/request.routes.js'));
 app.use('/api/v1/logs', require('./routes/log.routes.js'));
 app.use('/api/v1/users', require('./routes/user.routes.js'));
 app.use('/api/v1/reports', require('./routes/report.routes.js'));
-app.use('/api/v1', require('./routes/image.routes.js'));
 
 // Serve uploaded images (static files)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

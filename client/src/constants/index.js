@@ -15,6 +15,13 @@ export const REQUEST_STATUS = {
   REJECTED: 'مرفوض'
 };
 
+export const REQUEST_TYPE = {
+  ADD: 'إضافة',
+  EDIT: 'تعديل',
+  DELETE: 'حذف',
+  DELETE_IMAGE: 'حذف_صور',
+};
+
 export const LOG_ACTIONS = {
   LOGIN: 'تسجيل_دخول',
   LOGOUT: 'تسجيل_خروج',
