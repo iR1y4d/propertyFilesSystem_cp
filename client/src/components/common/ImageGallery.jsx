@@ -101,12 +101,18 @@ const ImageGallery = ({ propertyFileNumber, isAdmin = false }) => {
   // Employee: submit delete request
   const handleSubmitDeleteRequest = async () => {
     if (selectedImagesForDeletion.length === 0) return;
+    
+    if (!requestDescription || requestDescription.trim() === '') {
+      toast.error('يرجى توضيح سبب الحذف');
+      return;
+    }
+
     setSubmittingRequest(true);
     try {
       await submitRequest({
         propertyFileNumber: parseInt(propertyFileNumber, 10),
         requestType: 'حذف_صور',
-        requestDescription: requestDescription || 'طلب حذف صور',
+        requestDescription: requestDescription.trim(),
         newData: {
           imagesToDelete: selectedImagesForDeletion
         }
@@ -309,7 +315,7 @@ const ImageGallery = ({ propertyFileNumber, isAdmin = false }) => {
         loading={submittingRequest}
       >
         <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">سبب الحذف (اختياري)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">سبب الحذف <span className="text-red-500">*</span></label>
           <textarea
             value={requestDescription}
             onChange={(e) => setRequestDescription(e.target.value)}

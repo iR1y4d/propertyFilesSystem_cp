@@ -43,6 +43,7 @@ const RequestForm = ({ onSuccess, onCancel }) => {
     
     if (formData.requestType === 'إضافة' || formData.requestType === 'تعديل') {
       if (!formData.newData.ownerName) newErrors.ownerName = 'اسم المالك مطلوب';
+      if (!formData.newData.nationalNumber || String(formData.newData.nationalNumber).length !== 12) newErrors.nationalNumber = 'الرقم الوطني يجب أن يكون 12 رقم';
     }
 
     setErrors(newErrors);
@@ -139,6 +140,7 @@ const RequestForm = ({ onSuccess, onCancel }) => {
               name="newData.nationalNumber"
               value={formData.newData.nationalNumber}
               onChange={handleChange}
+              error={errors.nationalNumber}
             />
             <Input
               label="الموقع"

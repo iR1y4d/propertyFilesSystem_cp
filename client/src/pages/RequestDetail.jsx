@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowRight, FiCheckCircle, FiXCircle, FiInfo } from 'react-icons/fi';
+import { FiArrowRight, FiCheckCircle, FiXCircle, FiInfo, FiX } from 'react-icons/fi';
 import useFetch from '../hooks/useFetch';
 import { getRequest, approveRequest, rejectRequest, getRequestImages } from '../api/requestApi';
 import { useAuth } from '../hooks/useAuth';
@@ -29,6 +29,7 @@ const RequestDetail = () => {
   // Pending images state
   const [requestImages, setRequestImages] = useState([]);
   const [imagesLoading, setImagesLoading] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState(null);
 
   // Fetch pending images for admin review
   useEffect(() => {
@@ -151,11 +152,18 @@ const RequestDetail = () => {
         </div>
 
         <div className="p-8">
-          <div className="mb-8 p-4 bg-blue-50 border border-blue-100 rounded-lg flex gap-3 text-blue-800">
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg flex gap-3 text-blue-800">
             <FiInfo className="mt-1 flex-shrink-0" />
             <div>
               <p className="font-bold text-sm">وصف الطلب:</p>
               <p className="text-sm">{request.request_description || 'لا يوجد وصف'}</p>
+            </div>
+          </div>
+
+          <div className="mb-8 bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center justify-between">
+            <div>
+              <span className="text-sm font-bold text-gray-500">رقم الملف:</span>
+              <span className="ml-2 font-bold text-lg text-gray-800">{request.property_file_number}</span>
             </div>
           </div>
 
@@ -202,8 +210,9 @@ const RequestDetail = () => {
                 <img
                   src={`${API_BASE}${img.url}`}
                   alt={img.filename}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover cursor-pointer"
                   loading="lazy"
+                  onClick={() => setLightboxImage(img)}
                 />
               </div>
             ))}
@@ -214,6 +223,37 @@ const RequestDetail = () => {
       {isAdmin && imagesLoading && (
         <div className="flex justify-center py-4">
           <Spinner />
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/90 p-4"
+          onClick={() => setLightboxImage(null)}
+        >
+          <button
+            className="absolute top-4 left-4 p-2 bg-white/20 hover:bg-white/40 rounded-full text-white transition-colors"
+            onClick={() => setLightboxImage(null)}
+          >
+            <FiX size={24} />
+          </button>
+          <img
+            src={`${API_BASE}${lightboxImage.url}`}
+            alt={lightboxImage.filename}
+            className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <div className="mt-4 bg-black/60 text-white px-6 py-4 rounded-xl text-center max-w-2xl min-w-[300px]">
+            <p className="font-bold text-lg mb-1">رقم الملف: {request.property_file_number}</p>
+            <p className="text-sm text-gray-300">اسم الملف: {lightboxImage.filename}</p>
+            {request.request_description && (
+              <div className="mt-3 pt-3 border-t border-white/20 text-right">
+                <p className="text-xs text-gray-400 font-bold mb-1">وصف الطلب:</p>
+                <p className="text-sm leading-relaxed">{request.request_description}</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

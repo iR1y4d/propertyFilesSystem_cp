@@ -13,8 +13,8 @@ const createPropertySchema = z.object({
     }).min(2, 'اسم المالك يجب أن يكون حرفين على الأقل').max(255),
     nationalNumber: z.number({
       required_error: 'الرقم الوطني مطلوب'
-    }).int().refine(n => String(n).length === 10, {
-      message: 'الرقم الوطني يجب أن يكون 10 أرقام'
+    }).int().refine(n => String(n).length === 12, {
+      message: 'الرقم الوطني يجب أن يكون 12 رقم'
     }),
     location: z.string({
       required_error: 'الموقع مطلوب'
@@ -39,8 +39,8 @@ const updatePropertySchema = z.object({
   }),
   body: z.object({
     ownerName: z.string().min(2, 'اسم المالك يجب أن يكون حرفين على الأقل').max(255).optional(),
-    nationalNumber: z.number().int().refine(n => String(n).length === 10, {
-      message: 'الرقم الوطني يجب أن يكون 10 أرقام'
+    nationalNumber: z.number().int().refine(n => String(n).length === 12, {
+      message: 'الرقم الوطني يجب أن يكون 12 رقم'
     }).optional(),
     location: z.string().min(2, 'الموقع يجب أن يكون حرفين على الأقل').max(255).optional(),
     area: z.string().min(1).max(100).optional(),

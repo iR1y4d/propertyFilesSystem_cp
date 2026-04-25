@@ -29,7 +29,7 @@ const EditRequestForm = ({ property, onSuccess, onCancel }) => {
   const validate = () => {
     const newErrors = {};
     if (!formData.ownerName || formData.ownerName.length < 3) newErrors.ownerName = 'اسم المالك يجب أن يكون 3 حروف على الأقل';
-    if (!formData.nationalNumber || String(formData.nationalNumber).length !== 10) newErrors.nationalNumber = 'الرقم الوطني يجب أن يكون 10 أرقام';
+    if (!formData.nationalNumber || String(formData.nationalNumber).length !== 12) newErrors.nationalNumber = 'الرقم الوطني يجب أن يكون 12 رقم';
     if (!formData.location) newErrors.location = 'الموقع مطلوب';
     if (!formData.area) newErrors.area = 'المساحة مطلوبة';
     
