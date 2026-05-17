@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { FiPlus, FiEdit, FiImage } from 'react-icons/fi';
+import { useState, useMemo } from 'react';
+import { FiPlus, FiEdit, FiImage, FiDownload } from 'react-icons/fi';
 import { useAuth } from '../hooks/useAuth';
 import { ROLES } from '../constants';
 import { getProperties, searchProperties, deleteProperty } from '../api/propertyApi';
@@ -14,6 +14,8 @@ import Modal from '../components/common/Modal';
 import PropertyForm from '../components/forms/PropertyForm';
 import EditRequestForm from '../components/forms/EditRequestForm';
 import ImageGallery from '../components/common/ImageGallery';
+import { exportSearchProperties } from '../api/reportApi';
+import { downloadBlob } from '../utils/helpers';
 import { toast } from 'react-hot-toast';
 
 const Properties = () => {
@@ -30,15 +32,18 @@ const Properties = () => {
   const [editRequestProperty, setEditRequestProperty] = useState(null);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [imageProperty, setImageProperty] = useState(null);
+  const [exportLoading, setExportLoading] = useState(false);
 
-  const { data, loading, pagination, refetch } = useFetch(
-    searchTerm ? searchProperties : getProperties,
-    { page, limit: 10, ...(searchTerm && { search: searchTerm }) }
-  );
+  const apiFn = useMemo(() => searchTerm ? searchProperties : getProperties, [searchTerm]);
+  const params = useMemo(() => ({ page, limit: 10, ...(searchTerm && { search: searchTerm }) }), [page, searchTerm]);
+
+  const { data, loading, pagination, refetch } = useFetch(apiFn, params);
 
   const handleSearch = (term) => {
-    setSearchTerm(term);
-    setPage(1);
+    if (term !== searchTerm) {
+      setSearchTerm(term);
+      setPage(1);
+    }
   };
 
   const handleEdit = (property) => {
@@ -71,6 +76,22 @@ const Properties = () => {
     } finally {
       setIsDeleteModalOpen(false);
       setPropertyToDelete(null);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    setExportLoading(true);
+    try {
+      const searchParams = searchTerm ? { search: searchTerm } : {};
+      const response = await exportSearchProperties('pdf', searchParams);
+      const filename = `search_results_${new Date().toISOString().split('T')[0]}.pdf`;
+      downloadBlob(response.data, filename);
+      toast.success('تم إنشاء التقرير وتحميله بنجاح');
+    } catch (error) {
+      toast.error('فشل إنشاء التقرير. يرجى المحاولة لاحقاً.');
+      console.error(error);
+    } finally {
+      setExportLoading(false);
     }
   };
 
@@ -123,11 +144,11 @@ const Properties = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">إدارة العقارات</h1>
-          <p className="text-gray-500">البحث والتحكم في ملفات العقارات</p>
+          <h1 className="text-3xl font-bold text-gray-800">إدارة العقارات</h1>
+          <p className="text-gray-500 text-lg mt-2">البحث والتحكم في ملفات العقارات</p>
         </div>
         
         {isAdmin && (
@@ -138,8 +159,14 @@ const Properties = () => {
         )}
       </div>
 
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-center">
         <SearchBar value={searchTerm} onChange={handleSearch} placeholder="البحث باسم المالك..." />
+        {data && data.length > 0 && (
+          <Button variant="secondary" onClick={handleExportPdf} loading={exportLoading} className="whitespace-nowrap">
+            <FiDownload className="ml-2" />
+            تصدير PDF
+          </Button>
+        )}
       </div>
 
       <DataTable
@@ -159,15 +186,15 @@ const Properties = () => {
 
       {/* Property Form Modal */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 overflow-y-auto">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-800">
+            <div className="p-8 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-800">
                 {selectedProperty ? 'تعديل بيانات العقار' : 'إضافة عقار جديد'}
               </h2>
-              <button onClick={() => setIsFormOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+              <button onClick={() => setIsFormOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-2xl">&times;</button>
             </div>
-            <div className="p-6">
+            <div className="p-8">
               <PropertyForm
                 initialData={selectedProperty}
                 onSuccess={() => { setIsFormOpen(false); refetch(); }}
@@ -180,13 +207,13 @@ const Properties = () => {
 
       {/* Edit Request Modal */}
       {isEditRequestOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 overflow-y-auto">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-800">طلب تعديل بيانات العقار</h2>
-              <button onClick={() => setIsEditRequestOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+            <div className="p-8 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-800">طلب تعديل بيانات العقار</h2>
+              <button onClick={() => setIsEditRequestOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-2xl">&times;</button>
             </div>
-            <div className="p-6">
+            <div className="p-8">
               <EditRequestForm
                 property={editRequestProperty}
                 onSuccess={() => { setIsEditRequestOpen(false); refetch(); }}
@@ -199,15 +226,15 @@ const Properties = () => {
 
       {/* Image Gallery Modal */}
       {isImageModalOpen && imageProperty && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 overflow-y-auto">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-bold text-gray-800">
+            <div className="p-8 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
+              <h2 className="text-2xl font-bold text-gray-800">
                 صور العقار رقم {imageProperty.property_file_number}
               </h2>
-              <button onClick={() => setIsImageModalOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+              <button onClick={() => setIsImageModalOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-2xl">&times;</button>
             </div>
-            <div className="p-6">
+            <div className="p-8">
               <ImageGallery propertyFileNumber={imageProperty.property_file_number} isAdmin={isAdmin} />
             </div>
           </div>

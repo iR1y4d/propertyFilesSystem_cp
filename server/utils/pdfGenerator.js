@@ -23,7 +23,7 @@ const generatePDF = async (data, title, columns) => {
       if (!dateStr || dateStr === '-') return '-';
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return String(dateStr);
-      return d.toLocaleDateString('ar-JO', {
+      return d.toLocaleDateString('ar-SA-u-nu-latn', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -109,7 +109,7 @@ const generatePDF = async (data, title, columns) => {
 </head>
 <body>
   <h1>${escapeHtml(title)}</h1>
-  <p class="meta">تاريخ التقرير: ${new Date().toLocaleDateString('ar-JO', { year: 'numeric', month: 'long', day: 'numeric' })} — عدد السجلات: ${data.length}</p>
+  <p class="meta">تاريخ التقرير: ${new Date().toLocaleDateString('ar-SA-u-nu-latn', { year: 'numeric', month: 'long', day: 'numeric' })} — عدد السجلات: ${data.length}</p>
   <table>
     <thead>
       <tr>

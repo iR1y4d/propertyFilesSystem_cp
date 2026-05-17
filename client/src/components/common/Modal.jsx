@@ -7,11 +7,11 @@ const Modal = ({ isOpen, title, message, children, onConfirm, onClose, onCancel,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-surface rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
-        <h3 className="text-lg font-bold text-text mb-2">{title}</h3>
-        {message && <p className="text-text-light mb-4">{message}</p>}
-        {children && <div className="mb-6">{children}</div>}
-        <div className="flex gap-3 justify-end mt-2">
+      <div className="bg-surface rounded-xl shadow-2xl p-8 w-full max-w-md mx-4">
+        <h3 className="text-xl font-bold text-text mb-3">{title}</h3>
+        {message && <p className="text-text-light text-base mb-6 leading-relaxed">{message}</p>}
+        {children && <div className="mb-8">{children}</div>}
+        <div className="flex gap-4 justify-end mt-4">
           <Button variant="ghost" onClick={handleCancel}>{cancelText}</Button>
           <Button variant={variant} onClick={onConfirm} loading={loading}>{confirmText}</Button>
         </div>

@@ -98,11 +98,11 @@ const Users = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">إدارة المستخدمين</h1>
-          <p className="text-gray-500">إضافة وتعديل صلاحيات الموظفين</p>
+          <h1 className="text-3xl font-bold text-gray-800">إدارة المستخدمين</h1>
+          <p className="text-gray-500 text-lg mt-2">إضافة وتعديل صلاحيات الموظفين</p>
         </div>
         
         <Button onClick={() => { setSelectedUser(null); setIsFormOpen(true); }}>
@@ -127,15 +127,15 @@ const Users = () => {
 
       {/* User Form Modal */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 overflow-y-auto">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-xl">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-800">
+            <div className="p-8 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-800">
                 {selectedUser ? 'تعديل بيانات المستخدم' : 'إضافة مستخدم جديد'}
               </h2>
-              <button onClick={() => setIsFormOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+              <button onClick={() => setIsFormOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-2xl">&times;</button>
             </div>
-            <div className="p-6">
+            <div className="p-8">
               <UserForm
                 initialData={selectedUser}
                 onSuccess={() => { setIsFormOpen(false); refetch(); }}

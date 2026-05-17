@@ -5,7 +5,7 @@ const Badge = ({ status }) => {
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}
+      className={`inline-flex items-center px-3.5 py-1 rounded-full text-sm font-medium ${colorClass}`}
     >
       {status}
     </span>

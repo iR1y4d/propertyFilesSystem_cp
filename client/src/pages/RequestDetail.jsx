@@ -103,12 +103,12 @@ const RequestDetail = () => {
     const isChanged = newVal !== undefined && newVal !== null && newVal !== '' && String(oldVal) !== String(newVal);
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4 border-b border-gray-50 last:border-0">
-        <div className="text-sm font-bold text-gray-500">{label}</div>
-        <div className={`text-sm p-2 rounded ${isChanged ? 'text-red-500 line-through bg-red-50' : 'text-gray-600'}`}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-5 border-b border-gray-50 last:border-0">
+        <div className="text-base font-bold text-gray-500">{label}</div>
+        <div className={`text-base p-3 rounded ${isChanged ? 'text-red-500 line-through bg-red-50' : 'text-gray-600'}`}>
           {oldVal || '-'}
         </div>
-        <div className={`text-sm p-2 rounded ${isChanged ? 'bg-green-50 text-green-700 font-bold' : 'text-gray-400'}`}>
+        <div className={`text-base p-3 rounded ${isChanged ? 'bg-green-50 text-green-700 font-bold' : 'text-gray-400'}`}>
           {isChanged ? (newVal || '-') : '-'}
         </div>
       </div>
@@ -116,11 +116,11 @@ const RequestDetail = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <button
           onClick={() => navigate('/requests')}
-          className="flex items-center text-gray-500 hover:text-primary transition-colors text-sm font-medium"
+          className="flex items-center text-gray-500 hover:text-primary transition-colors text-base font-medium"
         >
           <FiArrowRight className="ml-2" />
           العودة للطلبات
@@ -141,35 +141,35 @@ const RequestDetail = () => {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+        <div className="p-8 border-b border-gray-100 flex items-center justify-between bg-gray-50">
           <div>
-            <h1 className="text-xl font-bold text-gray-800">
+            <h1 className="text-2xl font-bold text-gray-800">
               {isDeleteImagesRequest ? 'طلب حذف صور' : 'تفاصيل الطلب'} #{request.request_id}
             </h1>
-            <p className="text-sm text-gray-500">مقدم من: {request.requester_name} في {formatDate(request.created_at)}</p>
+            <p className="text-base text-gray-500 mt-1">مقدم من: {request.requester_name} في {formatDate(request.created_at)}</p>
           </div>
           <Badge status={request.status} />
         </div>
 
-        <div className="p-8">
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg flex gap-3 text-blue-800">
-            <FiInfo className="mt-1 flex-shrink-0" />
+        <div className="p-10">
+          <div className="mb-8 p-5 bg-blue-50 border border-blue-100 rounded-lg flex gap-4 text-blue-800">
+            <FiInfo className="mt-1 flex-shrink-0" size={20} />
             <div>
-              <p className="font-bold text-sm">وصف الطلب:</p>
-              <p className="text-sm">{request.request_description || 'لا يوجد وصف'}</p>
+              <p className="font-bold text-base">وصف الطلب:</p>
+              <p className="text-base mt-1">{request.request_description || 'لا يوجد وصف'}</p>
             </div>
           </div>
 
-          <div className="mb-8 bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center justify-between">
+          <div className="mb-10 bg-gray-50 p-5 rounded-lg border border-gray-100 flex items-center justify-between">
             <div>
-              <span className="text-sm font-bold text-gray-500">رقم الملف:</span>
-              <span className="ml-2 font-bold text-lg text-gray-800">{request.property_file_number}</span>
+              <span className="text-base font-bold text-gray-500">رقم الملف:</span>
+              <span className="ml-2 font-bold text-xl text-gray-800">{request.property_file_number}</span>
             </div>
           </div>
 
           {!isDeleteImagesRequest && (
             <div className="space-y-2">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 text-sm font-bold text-gray-400 uppercase tracking-wider">
                 <div>الحقل</div>
                 <div>القيمة الحالية</div>
                 <div>القيمة المقترحة</div>
@@ -188,8 +188,8 @@ const RequestDetail = () => {
       {/* Images Section */}
       {requestImages.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-100 bg-gray-50">
-            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+          <div className="p-8 border-b border-gray-100 bg-gray-50">
+            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
               📷 
               {isDeleteImagesRequest ? (
                 <span className="text-red-600">صور مطلوب حذفها ({requestImages.length})</span>
@@ -197,14 +197,14 @@ const RequestDetail = () => {
                 <span>صور مرفقة بالطلب ({requestImages.length})</span>
               )}
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-base text-gray-500 mt-2">
               {isDeleteImagesRequest 
                 ? (isPending ? 'سيتم حذف هذه الصور نهائياً من ملف العقار عند القبول' : 'الصور المطلوبة للحذف')
                 : (isPending ? 'سيتم نقل هذه الصور لمجلد العقار عند القبول' : 'صور مرفقة')
               }
             </p>
           </div>
-          <div className="p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <div className="p-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {requestImages.map((img, i) => (
               <div key={i} className={`aspect-square rounded-lg overflow-hidden border-2 bg-gray-50 hover:shadow-md transition-shadow ${isDeleteImagesRequest ? 'border-red-300' : 'border-gray-200'}`}>
                 <img

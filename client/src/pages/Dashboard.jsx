@@ -110,32 +110,32 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">مرحباً، {user?.firstName}</h1>
-        <p className="text-gray-500">نظرة عامة على النظام اليوم</p>
+        <h1 className="text-3xl font-bold text-gray-800">مرحباً، {user?.firstName}</h1>
+        <p className="text-gray-500 text-lg mt-2">نظرة عامة على النظام اليوم</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {cards.map((card, index) => (
           <div 
             key={index} 
             onClick={() => navigate(card.path)}
-            className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-blue-200 transition-all duration-200 group"
+            className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 flex items-center gap-6 cursor-pointer hover:shadow-md hover:border-blue-200 transition-all duration-200 group"
           >
-            <div className={`${card.color} p-4 rounded-lg text-white shadow-lg group-hover:scale-110 transition-transform duration-200`}>
-              <card.icon size={24} />
+            <div className={`${card.color} p-5 rounded-lg text-white shadow-lg group-hover:scale-110 transition-transform duration-200`}>
+              <card.icon size={28} />
             </div>
             <div>
-              <p className="text-sm text-gray-500 font-medium">{card.label}</p>
-              <p className="text-2xl font-bold text-gray-800">{card.value}</p>
+              <p className="text-base text-gray-500 font-medium">{card.label}</p>
+              <p className="text-3xl font-bold text-gray-800 mt-1">{card.value}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <h2 className="text-lg font-bold text-gray-800 mb-6">
+      <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+        <h2 className="text-xl font-bold text-gray-800 mb-8">
           {isAdmin ? 'آخر النشاطات في النظام' : 'آخر طلباتي'}
         </h2>
         <DataTable

@@ -33,11 +33,11 @@ const Logs = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">سجل التدقيق</h1>
-          <p className="text-gray-500">سجل كامل بجميع العمليات التي تمت على النظام</p>
+          <h1 className="text-3xl font-bold text-gray-800">سجل التدقيق</h1>
+          <p className="text-gray-500 text-lg mt-2">سجل كامل بجميع العمليات التي تمت على النظام</p>
         </div>
         
         <Button variant="secondary" onClick={() => refetch()}>
@@ -46,12 +46,12 @@ const Logs = () => {
         </Button>
       </div>
 
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-        <FiFilter className="text-gray-400" />
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <FiFilter className="text-gray-400" size={20} />
         <select
           value={actionFilter}
           onChange={(e) => { setActionFilter(e.target.value); setPage(1); }}
-          className="bg-transparent text-sm font-medium text-gray-600 focus:outline-none"
+          className="bg-transparent text-base font-medium text-gray-600 focus:outline-none"
         >
           <option value="">جميع العمليات</option>
           <option value={LOG_ACTIONS.LOGIN}>تسجيل الدخول</option>

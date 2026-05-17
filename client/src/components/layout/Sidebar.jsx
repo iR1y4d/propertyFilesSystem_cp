@@ -16,15 +16,15 @@ const Sidebar = () => {
   const { user, logout } = useAuth();
 
   return (
-    <aside className="h-screen w-64 bg-sidebar text-white flex flex-col sticky top-0 flex-shrink-0 z-40">
+    <aside className="h-screen w-72 bg-sidebar text-white flex flex-col sticky top-0 flex-shrink-0 z-40">
       {/* Logo Area */}
-      <div className="p-6 border-b border-white/10">
-        <h1 className="text-lg font-bold">إدارة الملفات العقارية</h1>
-        <p className="text-xs text-gray-400 mt-1">هيئة التسجيل العقاري</p>
+      <div className="p-8 border-b border-white/10">
+        <h1 className="text-3xl font-bold py-4 leading-snug">إدارة الملفات العقارية</h1>
+        <p className="text-sm text-gray-400 mt-2">هيئة التسجيل العقاري</p>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 overflow-y-auto">
+      <nav className="flex-1 py-6 overflow-y-auto">
         {navItems
           .filter(item => item.roles.includes(user?.role))
           .map(item => (
@@ -33,30 +33,30 @@ const Sidebar = () => {
               to={item.to}
               end={item.to === '/'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-6 py-3 text-sm transition-colors ${
+                `flex items-center gap-4 px-8 py-4 text-lg transition-colors ${
                   isActive
                     ? 'bg-primary text-white border-r-4 border-accent-light'
                     : 'text-gray-300 hover:bg-white/5 hover:text-white'
                 }`
               }
             >
-              <item.icon size={18} />
+              <item.icon size={22} />
               {item.label}
             </NavLink>
           ))}
       </nav>
 
       {/* User Info + Logout */}
-      <div className="p-4 border-t border-white/10">
-        <div className="text-sm mb-3">
-          <p className="font-medium">{user?.firstName} {user?.lastName}</p>
-          <p className="text-xs text-gray-400">{user?.role}</p>
+      <div className="p-8 border-t border-white/10">
+        <div className="text-base mb-4">
+          <p className="font-medium text-lg">{user?.firstName} {user?.lastName}</p>
+          <p className="text-sm text-gray-400 mt-1">{user?.role}</p>
         </div>
         <button
           onClick={logout}
-          className="flex items-center gap-2 text-sm text-red-400 hover:text-red-300 transition-colors w-full cursor-pointer"
+          className="flex items-center gap-3 text-base text-red-400 hover:text-red-300 transition-colors w-full cursor-pointer"
         >
-          <FiLogOut size={16} />
+          <FiLogOut size={20} />
           تسجيل الخروج
         </button>
       </div>

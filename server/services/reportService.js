@@ -66,7 +66,52 @@ const getLogReport = async (format, filters) => {
   }
 };
 
+/**
+ * Get filtered/searched property report
+ */
+const getSearchPropertyReport = async (user, format, filters) => {
+  // Fetch all matching properties (high limit, no pagination for report)
+  let properties = await propertyModel.findAll({ page: 1, limit: 10000, ...filters });
+
+  // Filter for employee
+  if (user.role === ROLES.EMPLOYEE) {
+    properties = properties.map(p => {
+      if (p.status === PROPERTY_STATUS.RESERVED) {
+        return {
+          property_file_number: p.property_file_number,
+          owner_name: '*** محجوز ***',
+          national_number: '**********',
+          location: '*** محجوز ***',
+          area: '-',
+          status: p.status,
+          created_at: p.created_at
+        };
+      }
+      return p;
+    });
+  }
+
+  const columns = [
+    { header: 'رقم الملف', key: 'property_file_number', width: 60 },
+    { header: 'اسم المالك', key: 'owner_name', width: 80 },
+    { header: 'الرقم الوطني', key: 'national_number', width: 75 },
+    { header: 'الموقع', key: 'location', width: 80 },
+    { header: 'المساحة', key: 'area', width: 45 },
+    { header: 'الحالة', key: 'status', width: 55 },
+    { header: 'تاريخ الإنشاء', key: 'created_at', width: 75 }
+  ];
+
+  const title = filters.search ? `نتائج البحث: "${filters.search}"` : 'تقرير العقارات (مُصفّى)';
+
+  if (format === 'pdf') {
+    return await generatePDF(properties, title, columns);
+  } else {
+    return await generateExcel(properties, 'نتائج البحث', columns);
+  }
+};
+
 module.exports = {
   getPropertyReport,
-  getLogReport
+  getLogReport,
+  getSearchPropertyReport
 };

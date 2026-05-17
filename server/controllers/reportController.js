@@ -63,7 +63,40 @@ const exportLogs = async (req, res, next) => {
   }
 };
 
+/**
+ * Export filtered/searched properties report
+ */
+const exportSearchProperties = async (req, res, next) => {
+  try {
+    const format = req.params.format;
+    if (!['pdf', 'excel'].includes(format)) {
+      throw { statusCode: 400, message: 'صيغة التقرير غير صحيحة، يجب أن تكون pdf أو excel' };
+    }
+
+    const { search, status, location, propertyFileNumber, ownerName, nationalNumber } = req.query;
+
+    const timeoutMs = 60000;
+    const buffer = await Promise.race([
+      reportService.getSearchPropertyReport(req.user, format, { search, status, location, propertyFileNumber, ownerName, nationalNumber }),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('انتهت مهلة إنشاء التقرير. يرجى المحاولة لاحقاً.')), timeoutMs)
+      )
+    ]);
+
+    const fileName = `search_results_${Date.now()}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+    const contentType = format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileName)}"`);
+    res.setHeader('Content-Length', buffer.length);
+    res.end(buffer);
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   exportProperties,
-  exportLogs
+  exportLogs,
+  exportSearchProperties
 };

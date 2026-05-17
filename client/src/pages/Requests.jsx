@@ -49,11 +49,11 @@ const Requests = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">{isAdmin ? 'طلبات التعديل' : 'طلباتي'}</h1>
-          <p className="text-gray-500">متابعة طلبات الإضافة والتعديل والحذف</p>
+          <h1 className="text-3xl font-bold text-gray-800">{isAdmin ? 'طلبات التعديل' : 'طلباتي'}</h1>
+          <p className="text-gray-500 text-lg mt-2">متابعة طلبات الإضافة والتعديل والحذف</p>
         </div>
         
         {!isAdmin && (
@@ -64,12 +64,12 @@ const Requests = () => {
         )}
       </div>
 
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-        <FiFilter className="text-gray-400" />
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <FiFilter className="text-gray-400" size={20} />
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          className="bg-transparent text-sm font-medium text-gray-600 focus:outline-none"
+          className="bg-transparent text-base font-medium text-gray-600 focus:outline-none"
         >
           <option value="">جميع الحالات</option>
           <option value="في الانتظار">في الانتظار</option>
@@ -95,13 +95,13 @@ const Requests = () => {
 
       {/* Request Form Modal */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 overflow-y-auto">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-800">تقديم طلب جديد</h2>
-              <button onClick={() => setIsFormOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+            <div className="p-8 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-800">تقديم طلب جديد</h2>
+              <button onClick={() => setIsFormOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-2xl">&times;</button>
             </div>
-            <div className="p-6">
+            <div className="p-8">
               <RequestForm
                 onSuccess={() => { setIsFormOpen(false); refetch(); }}
                 onCancel={() => setIsFormOpen(false)}

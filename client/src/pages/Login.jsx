@@ -46,14 +46,14 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-dark to-primary p-4">
-      <div className="bg-surface rounded-2xl shadow-2xl p-8 w-full max-w-md">
+      <div className="bg-surface rounded-2xl shadow-2xl p-10 w-full max-w-md">
         {/* Logo / Title */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">🏛️</span>
+        <div className="text-center mb-10">
+          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-5">
+            <span className="text-4xl">🏛️</span>
           </div>
-          <h1 className="text-2xl font-bold text-text">نظام إدارة الملفات العقارية</h1>
-          <p className="text-text-light text-sm mt-1">هيئة التسجيل العقاري</p>
+          <h1 className="text-3xl font-bold text-text">نظام إدارة الملفات العقارية</h1>
+          <p className="text-text-light text-base mt-2">هيئة التسجيل العقاري</p>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -73,7 +73,7 @@ const Login = () => {
             onChange={(e) => setPassword(e.target.value)}
             error={errors.password}
           />
-          <Button type="submit" loading={loading} className="w-full mt-4">
+          <Button type="submit" loading={loading} className="w-full mt-6">
             تسجيل الدخول
           </Button>
         </form>

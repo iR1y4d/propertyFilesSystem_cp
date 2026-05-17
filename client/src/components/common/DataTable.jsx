@@ -3,7 +3,7 @@ import Spinner from './Spinner';
 const DataTable = ({ columns, data, loading, emptyMessage = 'لا توجد بيانات' }) => {
   if (loading) {
     return (
-      <div className="flex justify-center p-12">
+      <div className="flex justify-center p-16">
         <Spinner size="lg" />
       </div>
     );
@@ -11,21 +11,21 @@ const DataTable = ({ columns, data, loading, emptyMessage = 'لا توجد بي�
 
   if (!data || data.length === 0) {
     return (
-      <div className="text-center p-12 bg-white border border-gray-100 rounded-lg text-gray-400">
+      <div className="text-center p-16 bg-white border border-gray-100 rounded-lg text-gray-400 text-lg">
         {emptyMessage}
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto bg-white rounded-lg shadow-sm border border-gray-100">
+    <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-100">
       <table className="w-full text-right border-collapse">
         <thead>
           <tr className="bg-gray-50 border-b border-gray-100">
             {columns.map((col) => (
               <th
                 key={col.key}
-                className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                className="px-8 py-5 text-sm font-semibold text-gray-500 uppercase tracking-wider"
               >
                 {col.label}
               </th>
@@ -39,7 +39,7 @@ const DataTable = ({ columns, data, loading, emptyMessage = 'لا توجد بي�
               className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
             >
               {columns.map((col) => (
-                <td key={col.key} className="px-6 py-4 text-sm text-gray-600">
+                <td key={col.key} className="px-8 py-5 text-base text-gray-600">
                   {col.render ? col.render(row) : row[col.key]}
                 </td>
               ))}

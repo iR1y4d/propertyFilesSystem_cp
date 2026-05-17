@@ -44,7 +44,7 @@ export const downloadBlob = async (data, filename) => {
 // Format date for display (Arabic)
 export const formatDate = (dateStr) => {
   if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleDateString('ar-JO', {
+  return new Date(dateStr).toLocaleDateString('ar-SA-u-nu-latn', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
