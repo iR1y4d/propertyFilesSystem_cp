@@ -16,7 +16,7 @@ const Sidebar = () => {
   const { user, logout } = useAuth();
 
   return (
-    <aside className="h-screen w-72 bg-sidebar text-white flex flex-col sticky top-0 flex-shrink-0 z-40">
+    <aside className="hidden md:block h-screen w-72 bg-sidebar text-white flex flex-col sticky top-0 flex-shrink-0 z-40">
       {/* Logo Area */}
       <div className="p-8 border-b border-white/10">
         <h1 className="text-3xl font-bold py-4 leading-snug">إدارة الملفات العقارية</h1>
@@ -33,10 +33,9 @@ const Sidebar = () => {
               to={item.to}
               end={item.to === '/'}
               className={({ isActive }) =>
-                `flex items-center gap-4 px-8 py-4 text-lg transition-colors ${
-                  isActive
-                    ? 'bg-primary text-white border-r-4 border-accent-light'
-                    : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                `flex items-center gap-4 px-8 py-4 text-lg transition-colors ${isActive
+                  ? 'bg-primary text-white border-r-4 border-accent-light'
+                  : 'text-gray-300 hover:bg-white/5 hover:text-white'
                 }`
               }
             >
