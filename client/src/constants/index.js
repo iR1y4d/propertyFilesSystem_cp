@@ -56,4 +56,28 @@ export const STATUS_COLORS = {
   'حذف_صور': 'bg-orange-100 text-orange-800',
 };
 
-export const API_BASE = import.meta.env.VITE_API_URL;
+let apiBase = import.meta.env.VITE_API_URL || '';
+
+if (apiBase) {
+  // Prepend protocol if missing
+  if (!apiBase.startsWith('http://') && !apiBase.startsWith('https://') && !apiBase.startsWith('/')) {
+    apiBase = 'https://' + apiBase;
+  }
+  // Normalize trailing slash
+  if (apiBase.endsWith('/')) {
+    apiBase = apiBase.slice(0, -1);
+  }
+  // Append API prefix if missing
+  if (!apiBase.endsWith('/api/v1')) {
+    if (apiBase.endsWith('/api')) {
+      apiBase = apiBase + '/v1';
+    } else {
+      apiBase = apiBase + '/api/v1';
+    }
+  }
+} else {
+  // Local development default
+  apiBase = '/api/v1';
+}
+
+export const API_BASE = apiBase;
