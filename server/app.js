@@ -54,18 +54,6 @@ app.get('/health', (req, res) => {
   res.json({ status: 'UP', timestamp: new Date() });
 });
 
-// TEMPORARY: Diagnostic endpoint to check env vars on Railway (REMOVE AFTER DEBUGGING)
-app.get('/debug/env', (req, res) => {
-  res.json({
-    NODE_ENV: process.env.NODE_ENV || 'NOT SET',
-    DATABASE_URL: process.env.DATABASE_URL ? 'SET ✅' : 'NOT SET ❌',
-    JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET ? 'SET ✅' : 'NOT SET ❌',
-    JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET ? 'SET ✅' : 'NOT SET ❌',
-    CORS_ORIGIN: process.env.CORS_ORIGIN || 'NOT SET',
-    PORT: process.env.PORT || 'NOT SET',
-  });
-});
-
 // Error handling
 app.use(errorHandler);
 
