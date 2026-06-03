@@ -21,7 +21,7 @@ const RequestDetail = () => {
   const isAdmin = user?.role === ROLES.ADMIN;
 
   const { data: request, loading, error, refetch } = useFetch(getRequest, id);
-  
+
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -34,7 +34,7 @@ const RequestDetail = () => {
   // Fetch pending images for admin review
   useEffect(() => {
     if (!id || !request) return;
-    
+
     // If it's a delete images request, we don't fetch pending images from temp folder,
     // we use the filenames listed in new_data
     if (request.request_type === REQUEST_TYPE.DELETE_IMAGE) {
@@ -174,7 +174,7 @@ const RequestDetail = () => {
                 <div>القيمة الحالية</div>
                 <div>القيمة المقترحة</div>
               </div>
-              
+
               <DiffRow label="اسم المالك" oldVal={request.old_data?.owner_name} newVal={request.new_data?.ownerName} />
               <DiffRow label="الرقم الوطني" oldVal={request.old_data?.national_number} newVal={request.new_data?.nationalNumber} />
               <DiffRow label="الموقع" oldVal={request.old_data?.location} newVal={request.new_data?.location} />
@@ -190,7 +190,7 @@ const RequestDetail = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-8 border-b border-gray-100 bg-gray-50">
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
-              📷 
+              📷
               {isDeleteImagesRequest ? (
                 <span className="text-red-600">صور مطلوب حذفها ({requestImages.length})</span>
               ) : (
@@ -198,7 +198,7 @@ const RequestDetail = () => {
               )}
             </h2>
             <p className="text-base text-gray-500 mt-2">
-              {isDeleteImagesRequest 
+              {isDeleteImagesRequest
                 ? (isPending ? 'سيتم حذف هذه الصور نهائياً من ملف العقار عند القبول' : 'الصور المطلوبة للحذف')
                 : (isPending ? 'سيتم نقل هذه الصور لمجلد العقار عند القبول' : 'صور مرفقة')
               }
@@ -262,7 +262,7 @@ const RequestDetail = () => {
         onClose={() => setIsApproveModalOpen(false)}
         onConfirm={handleApprove}
         title="قبول الطلب"
-        message={isDeleteImagesRequest 
+        message={isDeleteImagesRequest
           ? "هل أنت متأكد من قبول هذا الطلب؟ سيتم حذف الصور المحددة نهائياً من النظام ولن يمكن استعادتها."
           : "هل أنت متأكد من قبول هذا الطلب؟ سيتم تحديث بيانات العقار فوراً."
         }
