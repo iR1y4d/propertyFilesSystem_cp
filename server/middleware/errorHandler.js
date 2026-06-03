@@ -37,6 +37,6 @@ module.exports = (err, req, res, next) => {
 
   res.status(statusCode).json({
     success: false,
-    message: process.env.NODE_ENV === 'production' ? 'حدث خطأ داخلي في الخادم' : message
+    message: message // TEMPORARY: show real error for debugging (revert after fix)
   });
 };
