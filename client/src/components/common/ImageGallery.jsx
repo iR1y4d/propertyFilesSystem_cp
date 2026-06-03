@@ -6,8 +6,10 @@ import ImageUploader from './ImageUploader';
 import Modal from './Modal';
 import Spinner from './Spinner';
 import { toast } from 'react-hot-toast';
+import { API_BASE } from '../../constants';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// Derive backend origin for static files (images are served from root, not /api/v1)
+const BACKEND_URL = API_BASE.replace(/\/api\/v1\/?$/, '');
 
 const ImageGallery = ({ propertyFileNumber, isAdmin = false }) => {
   const [images, setImages] = useState([]);
@@ -219,7 +221,7 @@ const ImageGallery = ({ propertyFileNumber, isAdmin = false }) => {
                   }}
                 >
                   <img
-                    src={`${API_BASE}${image.url}`}
+                    src={`${BACKEND_URL}${image.url}`}
                     alt={image.filename}
                     className={`w-full h-full object-cover transition-transform ${isSelected ? 'opacity-80' : 'group-hover:scale-105'}`}
                     loading="lazy"
@@ -280,7 +282,7 @@ const ImageGallery = ({ propertyFileNumber, isAdmin = false }) => {
             <FiX size={24} />
           </button>
           <img
-            src={`${API_BASE}${lightboxImage.url}`}
+            src={`${BACKEND_URL}${lightboxImage.url}`}
             alt={lightboxImage.filename}
             className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
             onClick={(e) => e.stopPropagation()}

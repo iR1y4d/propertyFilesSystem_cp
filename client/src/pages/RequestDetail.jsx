@@ -12,7 +12,10 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { formatDate } from '../utils/helpers';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_BASE } from '../constants';
+
+// Derive backend origin for static files (images are served from root, not /api/v1)
+const BACKEND_URL = API_BASE.replace(/\/api\/v1\/?$/, '');
 
 const RequestDetail = () => {
   const { id } = useParams();
@@ -208,7 +211,7 @@ const RequestDetail = () => {
             {requestImages.map((img, i) => (
               <div key={i} className={`aspect-square rounded-lg overflow-hidden border-2 bg-gray-50 hover:shadow-md transition-shadow ${isDeleteImagesRequest ? 'border-red-300' : 'border-gray-200'}`}>
                 <img
-                  src={`${API_BASE}${img.url}`}
+                  src={`${BACKEND_URL}${img.url}`}
                   alt={img.filename}
                   className="w-full h-full object-cover cursor-pointer"
                   loading="lazy"
@@ -239,7 +242,7 @@ const RequestDetail = () => {
             <FiX size={24} />
           </button>
           <img
-            src={`${API_BASE}${lightboxImage.url}`}
+            src={`${BACKEND_URL}${lightboxImage.url}`}
             alt={lightboxImage.filename}
             className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl"
             onClick={(e) => e.stopPropagation()}
