@@ -10,9 +10,7 @@
     "migrate:up": "node -r dotenv/config ./node_modules/node-pg-migrate/bin/node-pg-migrate up",
     "migrate:down": "node -r dotenv/config ./node_modules/node-pg-migrate/bin/node-pg-migrate down",
     "seed": "node seeds/seed.js",
-    "test": "jest",
-    "build": "vite build",
-    "start": "serve -s dist -l $PORT"
+    "test": "jest"
   },
   "node-pg-migrate": {
     "migrations-dir": "./migrations",
