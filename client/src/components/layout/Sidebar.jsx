@@ -16,15 +16,16 @@ const Sidebar = () => {
   const { user, logout } = useAuth();
 
   return (
-    <aside className="hidden md:block h-screen w-72 bg-sidebar text-white flex flex-col sticky top-0 flex-shrink-0 z-40">
+    <aside className="h-screen w-72 text-white flex flex-col gap-10 sticky top-0 flex-shrink-0 z-40 ">
       {/* Logo Area */}
-      <div className="p-8 border-b border-white/10">
-        <h1 className="text-3xl font-bold py-4 leading-snug">إدارة الملفات العقارية</h1>
+      <div className="p-8 border-b border-white/10 text-center">
+        {/* <h1 className="text-3xl font-bold py-4 leading-snug">إدارة الملفات العقارية</h1> */}
+        <img src="logo.png" alt="" />
         <p className="text-sm text-gray-400 mt-2">هيئة التسجيل العقاري</p>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-6 overflow-y-auto">
+      <nav className=" overflow-y-hidden">
         {navItems
           .filter(item => item.roles.includes(user?.role))
           .map(item => (
@@ -35,7 +36,7 @@ const Sidebar = () => {
               className={({ isActive }) =>
                 `flex items-center gap-4 px-8 py-4 text-lg transition-colors ${isActive
                   ? 'bg-primary text-white border-r-4 border-accent-light'
-                  : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                  : 'text-[#555555] hover:bg-white/5 hover:text-primary'
                 }`
               }
             >
@@ -46,7 +47,7 @@ const Sidebar = () => {
       </nav>
 
       {/* User Info + Logout */}
-      <div className="p-8 border-t border-white/10">
+      <div className="p-8 border-t border-gray-400 text-[#555]">
         <div className="text-base mb-4">
           <p className="font-medium text-lg">{user?.firstName} {user?.lastName}</p>
           <p className="text-sm text-gray-400 mt-1">{user?.role}</p>

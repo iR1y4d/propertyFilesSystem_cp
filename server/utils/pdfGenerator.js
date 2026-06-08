@@ -1,4 +1,23 @@
 const puppeteer = require('puppeteer');
+const fs = require('fs');
+const path = require('path');
+
+// FIX 1: Corrected '.../' to '../' to properly navigate out of your server folder
+const clientLogoPath = path.resolve(__dirname, '../../client/public/logo.png');
+
+let logoImg = '';
+try {
+  if (fs.existsSync(clientLogoPath)) {
+    const fileBuffer = fs.readFileSync(clientLogoPath);
+    logoImg = `data:image/png;base64,${fileBuffer.toString('base64')}`;
+    console.log("✅ Logo successfully loaded into Base64 memory.");
+  } else {
+    // This log will print the exact path Node is looking at if it still fails
+    console.error("❌ File does not exist at path:", clientLogoPath);
+  }
+} catch (error) {
+  console.error("❌ Error reading logo file:", error);
+}
 
 /**
  * Generate PDF Report using Puppeteer for native browser rendering of Arabic text
@@ -18,6 +37,9 @@ const generatePDF = async (data, title, columns) => {
       timeout: 30000,
     });
     const page = await browser.newPage();
+
+    // FIX 2: Essential for Puppeteer to allow local Base64/File images to load
+    await page.setBypassCSP(true);
 
     const formatDate = (dateStr) => {
       if (!dateStr || dateStr === '-') return '-';
@@ -62,7 +84,7 @@ const generatePDF = async (data, title, columns) => {
   <style>
     * { box-sizing: border-box; }
     body {
-      font-family: 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+      font-family: 'Cairo', 'Segoe UI', 'Arial', sans-serif;
       margin: 0;
       padding: 30px;
       color: #333;
@@ -92,9 +114,9 @@ const generatePDF = async (data, title, columns) => {
       word-wrap: break-word;
     }
     th {
-      background-color: #e5e7eb;
+      background-color: #c69c36;
       font-weight: bold;
-      color: #1f2937;
+      color: #fff;
     }
     tr:nth-child(even) {
       background-color: #f9fafb;
@@ -105,9 +127,20 @@ const generatePDF = async (data, title, columns) => {
       font-size: 9px;
       margin-top: 20px;
     }
+    .logo-container {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    .logo-container img {
+      width: 120px; /* Set an explicit size for the PDF engine */
+      height: auto;
+    }
   </style>
 </head>
 <body>
+<div class="logo-container">
+    <img src="${logoImg}" alt="لوغو" />
+  </div>
   <h1>${escapeHtml(title)}</h1>
   <p class="meta">تاريخ التقرير: ${new Date().toLocaleDateString('ar-SA-u-nu-latn', { year: 'numeric', month: 'long', day: 'numeric' })} — عدد السجلات: ${data.length}</p>
   <table>
@@ -124,7 +157,7 @@ const generatePDF = async (data, title, columns) => {
 </body>
 </html>`;
 
-    await page.setContent(html, { waitUntil: 'load', timeout: 15000 });
+    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 15000 });
 
     const pdfUint8 = await page.pdf({
       format: 'A4',
@@ -138,14 +171,13 @@ const generatePDF = async (data, title, columns) => {
       }
     });
 
-    // IMPORTANT: Convert Uint8Array to Node.js Buffer for proper res.send()
     return Buffer.from(pdfUint8);
   } catch (err) {
     console.error('PDF Generation Error:', err);
     throw err;
   } finally {
     if (browser) {
-      await browser.close().catch(() => {});
+      await browser.close().catch(() => { });
     }
   }
 };

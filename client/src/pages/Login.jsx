@@ -45,13 +45,14 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-dark to-primary p-4">
-      <div className="bg-surface rounded-2xl shadow-2xl p-10 w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-[url('nbg.png')] bg-cover bg-no-repeat bg-center bg-gradient-to-br from-primary-dark to-primary p-4">
+      <div className="bg-surface rounded-2xl shadow-2xl p-10 w-full max-w-md ">
         {/* Logo / Title */}
         <div className="text-center mb-10">
-          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-5">
+          {/* <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-5">
             <span className="text-4xl">🏛️</span>
-          </div>
+          </div> */}
+          <img src="logo.png" alt="" className="mx-auto" />
           <h1 className="text-3xl font-bold text-text">نظام إدارة الملفات العقارية</h1>
           <p className="text-text-light text-base mt-2">هيئة التسجيل العقاري</p>
         </div>
