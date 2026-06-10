@@ -65,6 +65,7 @@ const Login = () => {
             onChange={(e) => setUsername(e.target.value)}
             error={errors.username}
             autoFocus
+
           />
           <Input
             id="password"
