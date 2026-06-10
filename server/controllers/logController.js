@@ -7,8 +7,10 @@ const listLogs = async (req, res, next) => {
   try {
     const { page, limit, userId, action, dateFrom, dateTo } = req.query;
     
-    const logs = await logModel.findAll({ page, limit, userId, action, dateFrom, dateTo });
-    const totalCount = await logModel.count({ userId, action, dateFrom, dateTo });
+    const [logs, totalCount] = await Promise.all([
+      logModel.findAll({ page, limit, userId, action, dateFrom, dateTo }),
+      logModel.count({ userId, action, dateFrom, dateTo })
+    ]);
 
     res.json({
       success: true,

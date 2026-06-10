@@ -4,7 +4,10 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const path = require('path');
-require('dotenv').config();
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+const authMiddleware = require('./middleware/auth');
+const { query } = require('./config/db');
 
 const errorHandler = require('./middleware/errorHandler');
 
@@ -30,8 +33,18 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(morgan('dev')); // Logging
-app.use(express.json()); // Parse JSON
+app.use(compression());
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev')); // Logging
+
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300, // 300 requests per window per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api', globalLimiter);
+
+app.use(express.json({ limit: '1mb' })); // Parse JSON
 app.use(cookieParser()); // Parse cookies
 
 // Routes
@@ -43,15 +56,17 @@ app.use('/api/v1/logs', require('./routes/log.routes.js'));
 app.use('/api/v1/users', require('./routes/user.routes.js'));
 app.use('/api/v1/reports', require('./routes/report.routes.js'));
 
-// Serve uploaded images (static files)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Serve pending images (for admin review of employee uploads)
-app.use('/uploads/pending', express.static(path.join(__dirname, 'uploads', 'pending')));
+// Serve uploaded images (static files) — require authentication
+app.use('/uploads', authMiddleware, express.static(path.join(__dirname, 'uploads')));
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'UP', timestamp: new Date() });
+app.get('/health', async (req, res) => {
+  try {
+    await query('SELECT 1');
+    res.json({ status: 'UP', database: 'connected', timestamp: new Date() });
+  } catch (err) {
+    res.status(503).json({ status: 'DOWN', database: 'disconnected', timestamp: new Date() });
+  }
 });
 
 // Error handling

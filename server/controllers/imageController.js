@@ -12,7 +12,7 @@ const getImages = async (req, res, next) => {
     // Check access (reuses existing role-based restriction for محجوز)
     await propertyService.getProperty(req.user, fileNumber);
 
-    const images = imageService.getImages(fileNumber);
+    const images = await imageService.getImages(fileNumber);
 
     res.json({
       success: true,
@@ -42,7 +42,7 @@ const uploadImages = async (req, res, next) => {
       });
     }
 
-    const images = imageService.getImages(fileNumber);
+    const images = await imageService.getImages(fileNumber);
 
     res.json({
       success: true,
@@ -61,16 +61,10 @@ const uploadImages = async (req, res, next) => {
 const deleteImage = async (req, res, next) => {
   try {
     const { fileNumber, filename } = req.params;
-    console.log('--- DELETE IMAGE ATTEMPT ---');
-    console.log('fileNumber:', fileNumber);
-    console.log('filename:', filename);
-
     // Verify property exists
     await propertyService.getProperty(req.user, fileNumber);
-    console.log('Property verified');
 
-    const deleted = imageService.deleteImage(fileNumber, filename);
-    console.log('Deleted status:', deleted);
+    const deleted = await imageService.deleteImage(fileNumber, filename);
 
     if (!deleted) {
       return res.status(400).json({
@@ -101,7 +95,7 @@ const deleteImage = async (req, res, next) => {
 const getPendingImages = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const images = imageService.getPendingImages(id);
+    const images = await imageService.getPendingImages(id);
 
     res.json({
       success: true,

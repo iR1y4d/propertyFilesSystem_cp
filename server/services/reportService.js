@@ -9,7 +9,7 @@ const { ROLES, PROPERTY_STATUS } = require('../config/constants');
  */
 const getPropertyReport = async (user, format) => {
   // Fetch all active properties (not paginated for report)
-  let properties = await propertyModel.findAll({ page: 1, limit: 1000 }); // Large limit for report
+  let properties = await propertyModel.findAll({ page: 1, limit: 5000 }); // Large limit for report (capped at 5000 to prevent OOM)
 
   // Filter for employee
   if (user.role === ROLES.EMPLOYEE) {
@@ -71,7 +71,7 @@ const getLogReport = async (format, filters) => {
  */
 const getSearchPropertyReport = async (user, format, filters) => {
   // Fetch all matching properties (high limit, no pagination for report)
-  let properties = await propertyModel.findAll({ page: 1, limit: 10000, ...filters });
+  let properties = await propertyModel.findAll({ page: 1, limit: 5000, ...filters }); // Capped at 5000 to prevent OOM
 
   // Filter for employee
   if (user.role === ROLES.EMPLOYEE) {

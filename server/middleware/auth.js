@@ -1,5 +1,4 @@
 const { verifyToken } = require('../utils/tokenUtils');
-require('dotenv').config();
 
 /**
  * Authentication middleware to verify JWT access tokens

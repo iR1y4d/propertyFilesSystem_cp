@@ -3,8 +3,8 @@ const path = require('path');
 const fs = require('fs');
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-const MAX_FILES = 500;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILES = 20; // 20 files
 
 /**
  * Create multer upload middleware for a given destination resolver.
@@ -18,14 +18,17 @@ const createUpload = (destinationResolver) => {
       cb(null, dest);
     },
     filename: (req, file, cb) => {
-      // Preserve original name, add timestamp prefix to avoid collisions
-      const uniqueName = `${Date.now()}-${file.originalname}`;
+      // Strip path components, keep only the base filename and sanitize it
+      const safeName = path.basename(file.originalname).replace(/[^a-zA-Z0-9._\u0600-\u06FF-]/g, '_');
+      const uniqueName = `${Date.now()}-${safeName}`;
       cb(null, uniqueName);
     }
   });
 
   const fileFilter = (req, file, cb) => {
-    if (ALLOWED_TYPES.includes(file.mimetype)) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const allowedExts = ['.jpg', '.jpeg', '.png', '.webp'];
+    if (ALLOWED_TYPES.includes(file.mimetype) && allowedExts.includes(ext)) {
       cb(null, true);
     } else {
       cb(new Error('نوع الملف غير مدعوم. يُسمح فقط بـ JPG, PNG, WEBP'), false);
@@ -35,7 +38,7 @@ const createUpload = (destinationResolver) => {
   return multer({
     storage,
     fileFilter,
-    limits: { fileSize: MAX_FILE_SIZE, files: MAX_FILES }
+    limits: { fileSize: MAX_FILE_SIZE }
   }).array('images', MAX_FILES);
 };
 

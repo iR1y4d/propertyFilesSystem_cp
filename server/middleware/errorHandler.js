@@ -1,8 +1,18 @@
+const AppError = require('../utils/AppError');
+
 /**
  * Global error handling middleware
  */
 module.exports = (err, req, res, next) => {
   console.error('❌ Error:', err.stack || err.message || err);
+
+  // AppError/Operational errors
+  if (err instanceof AppError || err.name === 'AppError') {
+    return res.status(err.statusCode).json({
+      success: false,
+      message: err.message
+    });
+  }
 
   // Zod validation errors
   if (err.name === 'ZodError') {
@@ -37,6 +47,8 @@ module.exports = (err, req, res, next) => {
 
   res.status(statusCode).json({
     success: false,
-    message: process.env.NODE_ENV === 'production' ? 'حدث خطأ داخلي في الخادم' : message
+    message: (process.env.NODE_ENV === 'production' && statusCode === 500)
+      ? 'حدث خطأ داخلي في الخادم'
+      : message
   });
 };

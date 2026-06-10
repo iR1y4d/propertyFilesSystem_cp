@@ -2,13 +2,17 @@ const propertyModel = require('../models/propertyModel');
 const logModel = require('../models/logModel');
 const imageService = require('./imageService');
 const { LOG_ACTIONS, ROLES, PROPERTY_STATUS } = require('../config/constants');
+const AppError = require('../utils/AppError');
 
 /**
  * List properties with role-based filtering
  */
 const listProperties = async (user, { page = 1, limit = 20, status, location, propertyFileNumber, ownerName, nationalNumber, search }) => {
-  const properties = await propertyModel.findAll({ page, limit, status, location, propertyFileNumber, ownerName, nationalNumber, search });
-  const totalCount = await propertyModel.count({ status, location, propertyFileNumber, ownerName, nationalNumber, search });
+  // Parallel query performance optimization (PERF-02)
+  const [properties, totalCount] = await Promise.all([
+    propertyModel.findAll({ page, limit, status, location, propertyFileNumber, ownerName, nationalNumber, search }),
+    propertyModel.count({ status, location, propertyFileNumber, ownerName, nationalNumber, search })
+  ]);
 
   // Role-based filtering: employees see restricted info for RESERVED (محجوز) properties
   const filteredProperties = properties.map(p => {
@@ -23,11 +27,14 @@ const listProperties = async (user, { page = 1, limit = 20, status, location, pr
     return p;
   });
 
-  // Enrich properties with has_images flag from filesystem
-  const enrichedProperties = filteredProperties.map(p => {
-    if (p.is_restricted) return p;
-    return { ...p, has_images: imageService.hasImages(p.property_file_number) };
-  });
+  // Enrich properties with has_images flag from filesystem asynchronously (PERF-01)
+  const enrichedProperties = await Promise.all(
+    filteredProperties.map(async (p) => {
+      if (p.is_restricted) return p;
+      const has_images = await imageService.hasImages(p.property_file_number);
+      return { ...p, has_images };
+    })
+  );
 
   return {
     properties: enrichedProperties,
@@ -47,12 +54,12 @@ const getProperty = async (user, fileNumber) => {
   const property = await propertyModel.findByFileNumber(fileNumber);
   
   if (!property) {
-    throw { statusCode: 404, message: 'العقار غير موجود' };
+    throw new AppError(404, 'العقار غير موجود');
   }
 
   // Block employee access to RESERVED details
   if (user.role === ROLES.EMPLOYEE && property.status === PROPERTY_STATUS.RESERVED) {
-    throw { statusCode: 403, message: 'لا تملك صلاحية عرض تفاصيل هذا العقار المحجوز' };
+    throw new AppError(403, 'لا تملك صلاحية عرض تفاصيل هذا العقار المحجوز');
   }
 
   return property;
@@ -65,7 +72,7 @@ const createProperty = async (userId, data) => {
   // Check if file number exists
   const existing = await propertyModel.findByFileNumber(data.propertyFileNumber);
   if (existing) {
-    throw { statusCode: 409, message: 'رقم ملف العقار موجود مسبقاً' };
+    throw new AppError(409, 'رقم ملف العقار موجود مسبقاً');
   }
 
   const property = await propertyModel.create(data);
@@ -87,7 +94,7 @@ const updateProperty = async (userId, fileNumber, data) => {
   const property = await propertyModel.update(fileNumber, data);
   
   if (!property) {
-    throw { statusCode: 404, message: 'العقار غير موجود' };
+    throw new AppError(404, 'العقار غير موجود');
   }
 
   // Audit log
@@ -107,7 +114,7 @@ const deleteProperty = async (userId, fileNumber) => {
   const property = await propertyModel.softDelete(fileNumber);
   
   if (!property) {
-    throw { statusCode: 404, message: 'العقار غير موجود' };
+    throw new AppError(404, 'العقار غير موجود');
   }
 
   // Audit log

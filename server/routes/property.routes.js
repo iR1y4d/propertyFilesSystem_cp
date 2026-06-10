@@ -7,14 +7,16 @@ const validate = require('../middleware/validate');
 const { createPropertySchema, updatePropertySchema } = require('../validators/propertyValidator');
 const { ROLES } = require('../config/constants');
 
+const pagination = require('../middleware/pagination');
+
 // Apply auth to all routes
 router.use(authMiddleware);
 
 // List properties (Admin and Employee)
-router.get('/', authorize(ROLES.ADMIN, ROLES.EMPLOYEE), propertyController.listProperties);
+router.get('/', authorize(ROLES.ADMIN, ROLES.EMPLOYEE), pagination, propertyController.listProperties);
 
 // Search properties (Logged)
-router.get('/search', authorize(ROLES.ADMIN, ROLES.EMPLOYEE), propertyController.searchProperties);
+router.get('/search', authorize(ROLES.ADMIN, ROLES.EMPLOYEE), pagination, propertyController.searchProperties);
 
 // Get property detail (Admin and Employee)
 router.get('/:fileNumber', authorize(ROLES.ADMIN, ROLES.EMPLOYEE), propertyController.getProperty);

@@ -1,8 +1,13 @@
 const { Pool } = require('pg');
-require('dotenv').config();
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' 
+    ? { rejectUnauthorized: false } 
+    : false,
+  max: parseInt(process.env.DB_POOL_MAX, 10) || 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
 });
 
 // Log connection events
@@ -12,7 +17,7 @@ pool.on('connect', () => {
 
 pool.on('error', (err) => {
   console.error('❌ PostgreSQL pool error:', err.message);
-  process.exit(1);
+  // Do not call process.exit(1) as the pool can recover from transient errors
 });
 
 /**

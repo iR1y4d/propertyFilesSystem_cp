@@ -3,7 +3,7 @@ const logModel = require('../models/logModel');
 const { comparePassword } = require('../utils/passwordUtils');
 const { generateAccessToken, generateRefreshToken, verifyToken } = require('../utils/tokenUtils');
 const { LOG_ACTIONS, MAX_LOGIN_ATTEMPTS } = require('../config/constants');
-require('dotenv').config();
+const AppError = require('../utils/AppError');
 
 /**
  * Handle user login
@@ -12,11 +12,11 @@ const login = async (username, password) => {
   const user = await userModel.findByUsername(username);
 
   if (!user) {
-    throw { statusCode: 401, message: 'اسم المستخدم أو كلمة المرور غير صحيحة' };
+    throw new AppError(401, 'اسم المستخدم أو كلمة المرور غير صحيحة');
   }
 
   if (user.is_locked) {
-    throw { statusCode: 403, message: 'هذا الحساب مغلق، يرجى التواصل مع المدير' };
+    throw new AppError(403, 'هذا الحساب مغلق، يرجى التواصل مع المدير');
   }
 
   const isPasswordValid = await comparePassword(password, user.password_hash);
@@ -27,10 +27,10 @@ const login = async (username, password) => {
 
     if (count >= MAX_LOGIN_ATTEMPTS) {
       await userModel.lockAccount(user.user_id);
-      throw { statusCode: 403, message: 'تم إغلاق الحساب بسبب كثرة المحاولات الخاطئة' };
+      throw new AppError(403, 'تم إغلاق الحساب بسبب كثرة المحاولات الخاطئة');
     }
 
-    throw { statusCode: 401, message: 'اسم المستخدم أو كلمة المرور غير صحيحة' };
+    throw new AppError(401, 'اسم المستخدم أو كلمة المرور غير صحيحة');
   }
 
   // Success: Reset attempts
@@ -96,7 +96,7 @@ const refreshAccessToken = async (token) => {
       }
     };
   } catch (err) {
-    throw { statusCode: 401, message: 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى' };
+    throw new AppError(401, 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى');
   }
 };
 

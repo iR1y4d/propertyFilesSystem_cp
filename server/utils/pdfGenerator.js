@@ -2,7 +2,7 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
-// FIX 1: Corrected '.../' to '../' to properly navigate out of your server folder
+// Corrected '.../' to '../' to properly navigate out of your server folder
 const clientLogoPath = path.resolve(__dirname, '../../client/public/logo.png');
 
 let logoImg = '';
@@ -12,21 +12,18 @@ try {
     logoImg = `data:image/png;base64,${fileBuffer.toString('base64')}`;
     console.log("✅ Logo successfully loaded into Base64 memory.");
   } else {
-    // This log will print the exact path Node is looking at if it still fails
     console.error("❌ File does not exist at path:", clientLogoPath);
   }
 } catch (error) {
   console.error("❌ Error reading logo file:", error);
 }
 
-/**
- * Generate PDF Report using Puppeteer for native browser rendering of Arabic text
- * and better layout control.
- */
-const generatePDF = async (data, title, columns) => {
-  let browser;
-  try {
-    browser = await puppeteer.launch({
+// Persistent browser instance (PERF-04)
+let browserInstance = null;
+
+const getBrowser = async () => {
+  if (!browserInstance || !browserInstance.isConnected()) {
+    browserInstance = await puppeteer.launch({
       headless: 'new',
       args: [
         '--no-sandbox',
@@ -36,11 +33,19 @@ const generatePDF = async (data, title, columns) => {
       ],
       timeout: 30000,
     });
-    const page = await browser.newPage();
+  }
+  return browserInstance;
+};
 
-    // FIX 2: Essential for Puppeteer to allow local Base64/File images to load
-    await page.setBypassCSP(true);
+/**
+ * Generate PDF Report using Puppeteer for native browser rendering of Arabic text
+ * and better layout control.
+ */
+const generatePDF = async (data, title, columns) => {
+  const browser = await getBrowser();
+  const page = await browser.newPage();
 
+  try {
     const formatDate = (dateStr) => {
       if (!dateStr || dateStr === '-') return '-';
       const d = new Date(dateStr);
@@ -176,9 +181,8 @@ const generatePDF = async (data, title, columns) => {
     console.error('PDF Generation Error:', err);
     throw err;
   } finally {
-    if (browser) {
-      await browser.close().catch(() => { });
-    }
+    // Close the page, keep the browser running
+    await page.close().catch(() => { });
   }
 };
 

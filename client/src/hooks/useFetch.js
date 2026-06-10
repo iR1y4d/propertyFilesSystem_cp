@@ -33,7 +33,7 @@ const useFetch = (apiFn, params = {}, autoFetch = true) => {
   useEffect(() => {
     if (autoFetch) fetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoFetch, fetch, paramsKey, apiFn]);
+  }, [autoFetch, fetch, paramsKey]);
 
   return { data, loading, error, pagination, refetch: fetch };
 };

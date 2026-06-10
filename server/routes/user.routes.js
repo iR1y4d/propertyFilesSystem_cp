@@ -11,7 +11,9 @@ const { ROLES } = require('../config/constants');
 router.use(authMiddleware);
 router.use(authorize(ROLES.ADMIN));
 
-router.get('/', userController.listUsers);
+const pagination = require('../middleware/pagination');
+
+router.get('/', pagination, userController.listUsers);
 router.get('/:id', userController.getUser);
 router.post('/', validate(createUserSchema), userController.createUser);
 router.put('/:id', validate(updateUserSchema), userController.updateUser);

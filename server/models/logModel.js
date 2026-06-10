@@ -1,6 +1,39 @@
 const { query } = require('../config/db');
 
 /**
+ * Shared helper to build WHERE clause dynamically for log queries
+ */
+const buildLogWhereClause = ({ userId, action, dateFrom, dateTo }, alias = '') => {
+  const prefix = alias ? `${alias}.` : '';
+  const conditions = [];
+  const params = [];
+  let paramIdx = 1;
+
+  if (userId) {
+    conditions.push(`${prefix}user_id = $${paramIdx++}`);
+    params.push(userId);
+  }
+
+  if (action) {
+    conditions.push(`${prefix}action = $${paramIdx++}`);
+    params.push(action);
+  }
+
+  if (dateFrom) {
+    conditions.push(`${prefix}time >= $${paramIdx++}`);
+    params.push(dateFrom);
+  }
+
+  if (dateTo) {
+    conditions.push(`${prefix}time <= $${paramIdx++}`);
+    params.push(dateTo);
+  }
+
+  const whereClause = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
+  return { whereClause, params, nextParamIdx: paramIdx };
+};
+
+/**
  * Create a new audit log entry
  * @param {Object} logData
  * @param {number} logData.userId - ID of the user performing the action
@@ -19,34 +52,16 @@ const createLog = async ({ userId, action, target }) => {
  */
 const findAll = async ({ page = 1, limit = 20, userId, action, dateFrom, dateTo }) => {
   const offset = (page - 1) * limit;
+  const where = buildLogWhereClause({ userId, action, dateFrom, dateTo }, 'l');
+  
   let sql = `
     SELECT l.*, u.username 
     FROM logs l 
-    JOIN users u ON l.user_id = u.user_id 
-    WHERE 1=1
+    JOIN users u ON l.user_id = u.user_id
+    ${where.whereClause}
   `;
-  const params = [];
-  let paramIdx = 1;
-
-  if (userId) {
-    sql += ` AND l.user_id = $${paramIdx++}`;
-    params.push(userId);
-  }
-
-  if (action) {
-    sql += ` AND l.action = $${paramIdx++}`;
-    params.push(action);
-  }
-
-  if (dateFrom) {
-    sql += ` AND l.time >= $${paramIdx++}`;
-    params.push(dateFrom);
-  }
-
-  if (dateTo) {
-    sql += ` AND l.time <= $${paramIdx++}`;
-    params.push(dateTo);
-  }
+  const params = [...where.params];
+  let paramIdx = where.nextParamIdx;
 
   sql += ` ORDER BY l.time DESC LIMIT $${paramIdx++} OFFSET $${paramIdx++}`;
   params.push(limit, offset);
@@ -59,31 +74,10 @@ const findAll = async ({ page = 1, limit = 20, userId, action, dateFrom, dateTo 
  * Count logs for pagination
  */
 const count = async ({ userId, action, dateFrom, dateTo }) => {
-  let sql = 'SELECT COUNT(*) FROM logs WHERE 1=1';
-  const params = [];
-  let paramIdx = 1;
-
-  if (userId) {
-    sql += ` AND user_id = $${paramIdx++}`;
-    params.push(userId);
-  }
-
-  if (action) {
-    sql += ` AND action = $${paramIdx++}`;
-    params.push(action);
-  }
-
-  if (dateFrom) {
-    sql += ` AND time >= $${paramIdx++}`;
-    params.push(dateFrom);
-  }
-
-  if (dateTo) {
-    sql += ` AND time <= $${paramIdx++}`;
-    params.push(dateTo);
-  }
-
-  const result = await query(sql, params);
+  const where = buildLogWhereClause({ userId, action, dateFrom, dateTo });
+  const sql = `SELECT COUNT(*) FROM logs${where.whereClause}`;
+  
+  const result = await query(sql, where.params);
   return parseInt(result.rows[0].count, 10);
 };
 

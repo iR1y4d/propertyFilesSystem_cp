@@ -3,7 +3,8 @@ const propertyModel = require('../models/propertyModel');
 const logModel = require('../models/logModel');
 const imageService = require('./imageService');
 const { getClient } = require('../config/db');
-const { LOG_ACTIONS, REQUEST_STATUS } = require('../config/constants');
+const { LOG_ACTIONS, REQUEST_STATUS, REQUEST_TYPE, ROLES } = require('../config/constants');
+const AppError = require('../utils/AppError');
 const fs = require('fs');
 const path = require('path');
 
@@ -15,8 +16,8 @@ const submitRequest = async (userId, data, files = []) => {
 
   // 1. Fetch current property for snapshot
   const property = await propertyModel.findByFileNumber(propertyFileNumber);
-  if (!property && requestType !== 'إضافة') {
-    throw { statusCode: 404, message: 'العقار غير موجود' };
+  if (!property && requestType !== REQUEST_TYPE.ADD) {
+    throw new AppError(404, 'العقار غير موجود');
   }
 
   // 2. Create request
@@ -56,24 +57,24 @@ const approveRequest = async (adminUserId, requestId) => {
   try {
     await client.query('BEGIN');
 
-    // 1. Get request
-    const request = await requestModel.findById(requestId);
+    // 1. Get request inside transaction and lock the row
+    const request = await requestModel.findById(requestId, client);
     if (!request) {
-      throw { statusCode: 404, message: 'الطلب غير موجود' };
+      throw new AppError(404, 'الطلب غير موجود');
     }
 
     if (request.status !== REQUEST_STATUS.PENDING) {
-      throw { statusCode: 400, message: 'هذا الطلب تم التعامل معه مسبقاً' };
+      throw new AppError(400, 'هذا الطلب تم التعامل معه مسبقاً');
     }
 
     // 2. Apply mutation to property
-    if (request.request_type === 'إضافة') {
+    if (request.request_type === REQUEST_TYPE.ADD) {
       await propertyModel.create({ ...request.new_data, propertyFileNumber: request.property_file_number }, client);
-    } else if (request.request_type === 'تعديل') {
+    } else if (request.request_type === REQUEST_TYPE.EDIT) {
       await propertyModel.update(request.property_file_number, request.new_data, client);
-    } else if (request.request_type === 'حذف') {
+    } else if (request.request_type === REQUEST_TYPE.DELETE) {
       await propertyModel.softDelete(request.property_file_number, client);
-    } else if (request.request_type === 'حذف_صور') {
+    } else if (request.request_type === REQUEST_TYPE.DELETE_IMAGE) {
       // No property mutation needed, handled outside transaction
     }
 
@@ -88,15 +89,15 @@ const approveRequest = async (adminUserId, requestId) => {
 
     await client.query('COMMIT');
 
-    // 5. Post-transaction file operations
-    if (request.request_type === 'حذف_صور') {
+    // 5. Post-transaction file operations (async)
+    if (request.request_type === REQUEST_TYPE.DELETE_IMAGE) {
       const imagesToDelete = request.new_data?.imagesToDelete || [];
-      imagesToDelete.forEach(filename => {
-        imageService.deleteImage(request.property_file_number, filename);
-      });
+      await Promise.all(
+        imagesToDelete.map(filename => imageService.deleteImage(request.property_file_number, filename))
+      );
     } else {
-      // Move pending images to final location (outside transaction — filesystem ops)
-      imageService.movePendingImages(requestId, request.property_file_number);
+      // Move pending images to final location (async)
+      await imageService.movePendingImages(requestId, request.property_file_number);
     }
 
     return { success: true, message: 'تم قبول الطلب وتطبيق التغييرات بنجاح' };
@@ -109,29 +110,41 @@ const approveRequest = async (adminUserId, requestId) => {
 };
 
 /**
- * Reject a request
+ * Reject a request with transaction
  */
 const rejectRequest = async (adminUserId, requestId) => {
-  const existing = await requestModel.findById(requestId);
-  if (!existing) throw { statusCode: 404, message: 'الطلب غير موجود' };
-  
-  if (existing.status !== REQUEST_STATUS.PENDING) {
-    throw { statusCode: 400, message: 'هذا الطلب تم التعامل معه مسبقاً' };
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Fetch and lock request inside transaction
+    const existing = await requestModel.findById(requestId, client);
+    if (!existing) throw new AppError(404, 'الطلب غير موجود');
+    
+    if (existing.status !== REQUEST_STATUS.PENDING) {
+      throw new AppError(400, 'هذا الطلب تم التعامل معه مسبقاً');
+    }
+
+    const request = await requestModel.updateStatus(client, requestId, REQUEST_STATUS.REJECTED);
+
+    // 2. Audit log
+    await client.query(
+      'INSERT INTO logs (user_id, action, target) VALUES ($1, $2, $3)',
+      [adminUserId, LOG_ACTIONS.REJECT, request.property_file_number]
+    );
+
+    await client.query('COMMIT');
+
+    // 3. Delete pending images (async, outside transaction)
+    await imageService.deletePendingImages(requestId);
+
+    return { success: true, message: 'تم رفض الطلب بنجاح' };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
   }
-
-  const request = await requestModel.updateStatus(null, requestId, REQUEST_STATUS.REJECTED);
-
-  // Delete pending images
-  imageService.deletePendingImages(requestId);
-
-  // Audit log
-  await logModel.createLog({
-    userId: adminUserId,
-    action: LOG_ACTIONS.REJECT,
-    target: request.property_file_number
-  });
-
-  return { success: true, message: 'تم رفض الطلب بنجاح' };
 };
 
 /**
@@ -141,12 +154,16 @@ const listRequests = async (user, { page = 1, limit = 20, status }) => {
   let requests;
   let totalCount;
 
-  if (user.role === 'مدير') {
-    requests = await requestModel.findAll({ page, limit, status });
-    totalCount = await requestModel.count({ status });
+  if (user.role === ROLES.ADMIN) {
+    [requests, totalCount] = await Promise.all([
+      requestModel.findAll({ page, limit, status }),
+      requestModel.count({ status })
+    ]);
   } else {
-    requests = await requestModel.findByUser(user.userId, { page, limit });
-    totalCount = await requestModel.count({ userId: user.userId });
+    [requests, totalCount] = await Promise.all([
+      requestModel.findByUser(user.userId, { page, limit }),
+      requestModel.count({ userId: user.userId })
+    ]);
   }
 
   return {
@@ -161,12 +178,16 @@ const listRequests = async (user, { page = 1, limit = 20, status }) => {
 };
 
 /**
- * Get request by ID
+ * Get request by ID with ownership checks
  */
-const getRequest = async (id) => {
+const getRequest = async (user, id) => {
   const request = await requestModel.findById(id);
   if (!request) {
-    throw { statusCode: 404, message: 'الطلب غير موجود' };
+    throw new AppError(404, 'الطلب غير موجود');
+  }
+  // Employees can only view their own requests
+  if (user.role !== ROLES.ADMIN && request.requested_by !== user.userId) {
+    throw new AppError(403, 'لا تملك صلاحية عرض هذا الطلب');
   }
   return request;
 };

@@ -1,11 +1,10 @@
 const { query } = require('../config/db');
 
 /**
- * Find all properties with pagination and filtering
+ * Shared helper to build WHERE clause for property queries
  */
-const findAll = async ({ page = 1, limit = 20, status, location, propertyFileNumber, ownerName, nationalNumber, search }) => {
-  const offset = (page - 1) * limit;
-  let sql = 'SELECT * FROM properties WHERE deleted_at IS NULL';
+const buildPropertyWhereClause = ({ status, location, propertyFileNumber, ownerName, nationalNumber, search }) => {
+  let sql = ' WHERE deleted_at IS NULL';
   const params = [];
   let paramIdx = 1;
 
@@ -45,6 +44,20 @@ const findAll = async ({ page = 1, limit = 20, status, location, propertyFileNum
       params.push(nationalNumber);
     }
   }
+
+  return { sql, params, nextParamIdx: paramIdx };
+};
+
+/**
+ * Find all properties with pagination and filtering
+ */
+const findAll = async ({ page = 1, limit = 20, status, location, propertyFileNumber, ownerName, nationalNumber, search }) => {
+  const offset = (page - 1) * limit;
+  const where = buildPropertyWhereClause({ status, location, propertyFileNumber, ownerName, nationalNumber, search });
+  
+  let sql = `SELECT * FROM properties${where.sql}`;
+  const params = [...where.params];
+  let paramIdx = where.nextParamIdx;
 
   sql += ` ORDER BY created_at DESC LIMIT $${paramIdx++} OFFSET $${paramIdx++}`;
   params.push(limit, offset);
@@ -57,48 +70,10 @@ const findAll = async ({ page = 1, limit = 20, status, location, propertyFileNum
  * Count properties for pagination
  */
 const count = async ({ status, location, propertyFileNumber, ownerName, nationalNumber, search }) => {
-  let sql = 'SELECT COUNT(*) FROM properties WHERE deleted_at IS NULL';
-  const params = [];
-  let paramIdx = 1;
-
-  if (status) {
-    sql += ` AND status = $${paramIdx++}`;
-    params.push(status);
-  }
-
-  if (search) {
-    sql += ` AND (
-      owner_name ILIKE $${paramIdx} OR 
-      location ILIKE $${paramIdx} OR 
-      CAST(property_file_number AS TEXT) ILIKE $${paramIdx} OR 
-      CAST(national_number AS TEXT) ILIKE $${paramIdx} OR
-      area ILIKE $${paramIdx}
-    )`;
-    params.push(`%${search}%`);
-    paramIdx++;
-  } else {
-    if (location) {
-      sql += ` AND location ILIKE $${paramIdx++}`;
-      params.push(`%${location}%`);
-    }
-
-    if (propertyFileNumber) {
-      sql += ` AND property_file_number = $${paramIdx++}`;
-      params.push(propertyFileNumber);
-    }
-
-    if (ownerName) {
-      sql += ` AND owner_name ILIKE $${paramIdx++}`;
-      params.push(`%${ownerName}%`);
-    }
-
-    if (nationalNumber) {
-      sql += ` AND national_number = $${paramIdx++}`;
-      params.push(nationalNumber);
-    }
-  }
-
-  const result = await query(sql, params);
+  const where = buildPropertyWhereClause({ status, location, propertyFileNumber, ownerName, nationalNumber, search });
+  const sql = `SELECT COUNT(*) FROM properties${where.sql}`;
+  
+  const result = await query(sql, where.params);
   return parseInt(result.rows[0].count, 10);
 };
 

@@ -2,13 +2,17 @@ const userModel = require('../models/userModel');
 const logModel = require('../models/logModel');
 const { hashPassword } = require('../utils/passwordUtils');
 const { LOG_ACTIONS } = require('../config/constants');
+const AppError = require('../utils/AppError');
 
 /**
  * List all users
  */
 const listUsers = async ({ page = 1, limit = 20 }) => {
-  const users = await userModel.findAll({ page, limit });
-  const totalCount = await userModel.count();
+  // Parallel query performance optimization (PERF-02)
+  const [users, totalCount] = await Promise.all([
+    userModel.findAll({ page, limit }),
+    userModel.count()
+  ]);
 
   return {
     users,
@@ -27,7 +31,7 @@ const listUsers = async ({ page = 1, limit = 20 }) => {
 const getUser = async (id) => {
   const user = await userModel.findById(id);
   if (!user) {
-    throw { statusCode: 404, message: 'المستخدم غير موجود' };
+    throw new AppError(404, 'المستخدم غير موجود');
   }
   return user;
 };
@@ -39,7 +43,7 @@ const createUser = async (adminUserId, data) => {
   // Check if username unique
   const existing = await userModel.findByUsername(data.username);
   if (existing) {
-    throw { statusCode: 409, message: 'اسم المستخدم موجود مسبقاً' };
+    throw new AppError(409, 'اسم المستخدم موجود مسبقاً');
   }
 
   // Hash password
@@ -66,7 +70,7 @@ const createUser = async (adminUserId, data) => {
 const updateUser = async (adminUserId, userId, data) => {
   const user = await userModel.update(userId, data);
   if (!user) {
-    throw { statusCode: 404, message: 'المستخدم غير موجود' };
+    throw new AppError(404, 'المستخدم غير موجود');
   }
 
   // Log action
@@ -84,11 +88,11 @@ const updateUser = async (adminUserId, userId, data) => {
  */
 const deleteUser = async (adminUserId, userId) => {
   if (String(adminUserId) === String(userId)) {
-    throw { statusCode: 400, message: 'لا يمكنك حذف حسابك الخاص' };
+    throw new AppError(400, 'لا يمكنك حذف حسابك الخاص');
   }
   const user = await userModel.softDelete(userId);
   if (!user) {
-    throw { statusCode: 404, message: 'المستخدم غير موجود' };
+    throw new AppError(404, 'المستخدم غير موجود');
   }
 
   // Log action
@@ -107,7 +111,7 @@ const deleteUser = async (adminUserId, userId) => {
 const resetPassword = async (adminUserId, userId, newPassword) => {
   const user = await userModel.findById(userId);
   if (!user) {
-    throw { statusCode: 404, message: 'المستخدم غير موجود' };
+    throw new AppError(404, 'المستخدم غير موجود');
   }
 
   const passwordHash = await hashPassword(newPassword);
@@ -129,7 +133,7 @@ const resetPassword = async (adminUserId, userId, newPassword) => {
 const unlockAccount = async (adminUserId, userId) => {
   const result = await userModel.unlockAccount(userId);
   if (!result) {
-    throw { statusCode: 404, message: 'المستخدم غير موجود' };
+    throw new AppError(404, 'المستخدم غير موجود');
   }
 
   // Log action

@@ -5,7 +5,9 @@ const authMiddleware = require('../middleware/auth');
 const authorize = require('../middleware/rbac');
 const { ROLES } = require('../config/constants');
 
+const pagination = require('../middleware/pagination');
+
 // Admin only module
-router.get('/', authMiddleware, authorize(ROLES.ADMIN), logController.listLogs);
+router.get('/', authMiddleware, authorize(ROLES.ADMIN), pagination, logController.listLogs);
 
 module.exports = router;

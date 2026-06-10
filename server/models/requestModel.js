@@ -5,7 +5,7 @@ const { query } = require('../config/db');
  */
 const findAll = async ({ page = 1, limit = 20, status }) => {
   const offset = (page - 1) * limit;
-  let sql = 'SELECT r.*, u.username as requester_name FROM edit_requests r JOIN users u ON r.requested_by = u.user_id';
+  let sql = 'SELECT r.*, u.username as requester_name FROM edit_requests r LEFT JOIN users u ON r.requested_by = u.user_id';
   const params = [];
   let paramIdx = 1;
 
@@ -61,11 +61,12 @@ const findByUser = async (userId, { page = 1, limit = 20 }) => {
 /**
  * Find request by ID
  */
-const findById = async (id) => {
-  const result = await query(
-    'SELECT r.*, u.username as requester_name FROM edit_requests r JOIN users u ON r.requested_by = u.user_id WHERE r.request_id = $1',
-    [id]
-  );
+const findById = async (id, client) => {
+  const q = client ? client.query.bind(client) : query;
+  const queryText = client
+    ? 'SELECT r.*, u.username as requester_name FROM edit_requests r LEFT JOIN users u ON r.requested_by = u.user_id WHERE r.request_id = $1 FOR UPDATE'
+    : 'SELECT r.*, u.username as requester_name FROM edit_requests r LEFT JOIN users u ON r.requested_by = u.user_id WHERE r.request_id = $1';
+  const result = await q(queryText, [id]);
   return result.rows[0];
 };
 

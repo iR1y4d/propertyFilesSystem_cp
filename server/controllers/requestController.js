@@ -66,7 +66,7 @@ const listMyRequests = async (req, res, next) => {
  */
 const getRequest = async (req, res, next) => {
   try {
-    const result = await requestService.getRequest(req.params.id);
+    const result = await requestService.getRequest(req.user, req.params.id);
     res.json({
       success: true,
       data: result,

@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { query } = require('../config/db');
 const { hashPassword } = require('../utils/passwordUtils');
 const { ROLES, PROPERTY_STATUS } = require('../config/constants');
@@ -10,28 +11,30 @@ const seed = async () => {
     console.log('🌱 Seeding database...');
 
     // 1. Create Admin User
-    const adminPassword = await hashPassword('Admin@2026');
+    const adminRaw = process.env.SEED_ADMIN_PASSWORD || 'Admin@2026';
+    const adminPassword = await hashPassword(adminRaw);
     await query(
       'INSERT INTO users (first_name, last_name, username, password_hash, role) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (username) DO NOTHING',
       ['مدير', 'النظام', 'admin', adminPassword, ROLES.ADMIN]
     );
-    console.log('✅ Admin user created');
+    console.log(`✅ Admin user created (password: ${process.env.SEED_ADMIN_PASSWORD ? '********' : 'Admin@2026'})`);
 
     // 2. Create Employee User
-    const employeePassword = await hashPassword('Employee@2026');
+    const employeeRaw = process.env.SEED_EMPLOYEE_PASSWORD || 'Employee@2026';
+    const employeePassword = await hashPassword(employeeRaw);
     await query(
       'INSERT INTO users (first_name, last_name, username, password_hash, role) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (username) DO NOTHING',
       ['موظف', 'أول', 'employee1', employeePassword, ROLES.EMPLOYEE]
     );
-    console.log('✅ Employee user created');
+    console.log(`✅ Employee user created (password: ${process.env.SEED_EMPLOYEE_PASSWORD ? '********' : 'Employee@2026'})`);
 
-    // 3. Create Sample Properties
+    // 3. Create Sample Properties — using 12-digit national numbers to pass validators
     const properties = [
-      [1001, 'أحمد صالح', 1234567890, 'عمان - شارع الاستقلال', '120م', PROPERTY_STATUS.CERTIFIED],
-      [1002, 'محمد علي', 2345678901, 'اربد - الحي الشرقي', '150م', PROPERTY_STATUS.TEMPORARY],
-      [1003, 'خالد حسن', 3456789012, 'الزرقاء - وادي الحجر', '200م', PROPERTY_STATUS.RESERVED],
-      [1004, 'ياسين محمود', 4567890123, 'عمان - خلدا', '180م', PROPERTY_STATUS.CERTIFIED],
-      [1005, 'سليمان عيسى', 5678901234, 'العقبة - الخامسة', '300م', PROPERTY_STATUS.TEMPORARY],
+      [1001, 'أحمد صالح', 123456789012, 'عمان - شارع الاستقلال', '120م', PROPERTY_STATUS.CERTIFIED],
+      [1002, 'محمد علي', 234567890123, 'اربد - الحي الشرقي', '150م', PROPERTY_STATUS.TEMPORARY],
+      [1003, 'خالد حسن', 345678901234, 'الزرقاء - وادي الحجر', '200م', PROPERTY_STATUS.RESERVED],
+      [1004, 'ياسين محمود', 456789012345, 'عمان - خلدا', '180م', PROPERTY_STATUS.CERTIFIED],
+      [1005, 'سليمان عيسى', 567890123456, 'العقبة - الخامسة', '300م', PROPERTY_STATUS.TEMPORARY],
     ];
 
     for (const p of properties) {
