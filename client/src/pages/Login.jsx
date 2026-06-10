@@ -45,7 +45,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[url('nbg.png')] bg-cover bg-no-repeat bg-center bg-gradient-to-br from-primary-dark to-primary p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[url('/nbg.png')] bg-cover bg-no-repeat bg-center bg-gradient-to-br from-primary-dark to-primary p-4">
       <div className="bg-surface rounded-2xl shadow-2xl p-10 w-full max-w-md ">
         {/* Logo / Title */}
         <div className="text-center mb-10">
