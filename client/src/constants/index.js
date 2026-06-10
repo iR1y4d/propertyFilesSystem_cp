@@ -1,7 +1,26 @@
+import { FiFileText } from 'react-icons/fi';
+
 export const ROLES = {
   ADMIN: 'مدير',
   EMPLOYEE: 'موظف'
 };
+
+export const PRINTABLE_FORMS = [
+  { 
+    name: 'شهادة ملكية',
+    description: 'نموذج شهادة ملكية',
+    filename: 'ownership_certificate.pdf',
+    icon: FiFileText 
+  },
+  { 
+    name: 'نموذج تغيير ملكية',
+    description: 'نموذج تغيير ملكية',
+    filename: 'ownership_transfer.pdf',
+    icon: FiFileText 
+  },
+  // Add more forms here
+];
+
 
 export const PROPERTY_STATUS = {
   TEMPORARY: 'مؤقت',

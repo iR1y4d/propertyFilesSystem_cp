@@ -1,29 +1,14 @@
 import { useState } from 'react';
-import { FiDownload, FiFileText, FiList } from 'react-icons/fi';
-import { exportProperties, exportLogs } from '../api/reportApi';
-import { downloadBlob } from '../utils/helpers';
+import { FiDownload, FiFileText, FiList, FiPrinter } from 'react-icons/fi';
+import { exportProperties, exportLogs, getFormFile } from '../api/reportApi';
+import { downloadBlob, printPdfBlob } from '../utils/helpers';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
-import { ROLES } from '../constants';
+import { ROLES, PRINTABLE_FORMS } from '../constants';
 import Button from '../components/common/Button';
 
-const PRINTABLE_FORMS = [
-  { 
-    name: 'شهادة ملكية',
-    description: 'نموذج شهادة ملكية',
-    filename: 'ownership_certificate.pdf',
-    icon: FiFileText 
-  },
-  { 
-    name: 'نموذج تغيير ملكية',
-    description: 'نموذج تغيير ملكية',
-    filename: 'ownership_transfer.pdf',
-    icon: FiFileText 
-  },
-  // Add more forms here
-];
 
-const FormCard = ({ form }) => (
+const FormCard = ({ form, onPrint, isPrinting }) => (
   <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between h-full">
     <div>
       <div className="bg-primary/10 w-12 h-12 rounded-lg flex items-center justify-center text-primary mb-4">
@@ -32,16 +17,14 @@ const FormCard = ({ form }) => (
       <h3 className="text-xl font-bold text-gray-800">{form.name}</h3>
       <p className="text-sm text-gray-500 mt-2 mb-6">{form.description}</p>
     </div>
-    <a 
-      href={`/forms/${form.filename}`} 
-      download 
-      target="_blank" 
-      rel="noreferrer"
-      className="inline-flex justify-center items-center gap-2 w-full py-3 px-4 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 border border-gray-200 transition-colors font-medium"
+    <button 
+      onClick={() => onPrint(form.filename)}
+      disabled={isPrinting}
+      className="inline-flex justify-center items-center gap-2 w-full py-3 px-4 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 border border-gray-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
     >
-      <FiDownload />
-      تحميل النموذج
-    </a>
+      <FiPrinter />
+      {isPrinting ? 'جاري التحضير...' : 'طباعة النموذج'}
+    </button>
   </div>
 );
 
@@ -71,6 +54,22 @@ const Reports = () => {
       console.error(error);
     } finally {
       setLoading(prev => ({ ...prev, [key]: false }));
+    }
+  };
+
+  const [printingFilename, setPrintingFilename] = useState(null);
+
+  const handlePrintForm = async (filename) => {
+    setPrintingFilename(filename);
+    try {
+      const response = await getFormFile(filename);
+      printPdfBlob(response.data);
+      toast.success('تمت تهيئة الطباعة بنجاح');
+    } catch (error) {
+      toast.error('فشل تحميل النموذج للطباعة. يرجى المحاولة لاحقاً.');
+      console.error(error);
+    } finally {
+      setPrintingFilename(null);
     }
   };
 
@@ -157,7 +156,12 @@ const Reports = () => {
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {PRINTABLE_FORMS.map((form, index) => (
-            <FormCard key={index} form={form} />
+            <FormCard 
+              key={index} 
+              form={form} 
+              onPrint={handlePrintForm}
+              isPrinting={printingFilename === form.filename}
+            />
           ))}
         </div>
       </div>

@@ -1,4 +1,6 @@
 const reportService = require('../services/reportService');
+const path = require('path');
+const fs = require('fs');
 
 /**
  * Export properties report
@@ -95,8 +97,42 @@ const exportSearchProperties = async (req, res, next) => {
   }
 };
 
+/**
+ * Get static printable form file securely
+ */
+const getFormFile = async (req, res, next) => {
+  try {
+    const { filename } = req.params;
+
+    // Sanitize filename to prevent directory traversal
+    const safeFilename = path.basename(filename);
+    
+    const filePath = path.join(__dirname, '..', 'assets', 'forms', safeFilename);
+
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        message: 'الملف غير موجود'
+      });
+    }
+
+    // Set headers to serve PDF inline (print in browser rather than download)
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(safeFilename)}"`);
+
+    // Stream the file response
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   exportProperties,
   exportLogs,
-  exportSearchProperties
+  exportSearchProperties,
+  getFormFile
 };
+

@@ -52,3 +52,57 @@ export const formatDate = (dateStr) => {
     minute: '2-digit',
   });
 };
+
+// Print a PDF blob directly in the browser via a hidden iframe
+export const printPdfBlob = (data) => {
+  const blob = new Blob([data], { type: 'application/pdf' });
+  const blobUrl = URL.createObjectURL(blob);
+
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'absolute';
+  iframe.style.top = '-9999px';
+  iframe.style.left = '-9999px';
+  iframe.style.width = '800px';
+  iframe.style.height = '600px';
+  iframe.style.border = 'none';
+  iframe.src = blobUrl;
+
+  document.body.appendChild(iframe);
+
+  const triggerPrint = () => {
+    try {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    } catch (e) {
+      console.error('Failed to trigger inline print, opening in new tab', e);
+      window.open(blobUrl, '_blank');
+    }
+
+    // Defer cleanup by 5 minutes so the print dialog doesn't close prematurely
+    setTimeout(() => {
+      try {
+        document.body.removeChild(iframe);
+        URL.revokeObjectURL(blobUrl);
+      } catch (err) {
+        // ignore if already cleaned up
+      }
+    }, 300000);
+  };
+
+  let loaded = false;
+  iframe.onload = () => {
+    if (!loaded) {
+      loaded = true;
+      triggerPrint();
+    }
+  };
+
+  // Fallback timeout in case onload doesn't trigger for PDF plugin
+  setTimeout(() => {
+    if (!loaded) {
+      loaded = true;
+      triggerPrint();
+    }
+  }, 1000);
+};
+

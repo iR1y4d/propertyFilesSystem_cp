@@ -17,4 +17,7 @@ router.get('/properties-search/:format', authorize(ROLES.ADMIN, ROLES.EMPLOYEE),
 // Log reports (Admin only)
 router.get('/logs/:format', authorize(ROLES.ADMIN), reportController.exportLogs);
 
+// Serves static printable forms securely (Available to Admin and Employee)
+router.get('/forms/:filename', authorize(ROLES.ADMIN, ROLES.EMPLOYEE), reportController.getFormFile);
+
 module.exports = router;

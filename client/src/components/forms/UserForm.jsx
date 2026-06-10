@@ -97,12 +97,12 @@ const UserForm = ({ initialData, onSuccess, onCancel }) => {
           />
         )}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-700">الدور</label>
+          <label>الدور</label>
           <select
             name="role"
             value={formData.role}
             onChange={handleChange}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm bg-white"
+            className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary  bg-white"
           >
             <option value={ROLES.EMPLOYEE}>موظف</option>
             <option value={ROLES.ADMIN}>مدير</option>
