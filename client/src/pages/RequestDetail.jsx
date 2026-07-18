@@ -22,6 +22,7 @@ const RequestDetail = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.role === ROLES.ADMIN;
+  const canReview = user?.role === ROLES.ADMIN || user?.role === ROLES.DEPARTMENT_HEAD;
 
   const { data: request, loading, error, refetch } = useFetch(getRequest, id);
 
@@ -64,7 +65,7 @@ const RequestDetail = () => {
       }
     };
     fetchImages();
-  }, [id, isAdmin, request]);
+  }, [id, canReview, request]);
 
   const handleApprove = async () => {
     setActionLoading(true);
@@ -129,7 +130,7 @@ const RequestDetail = () => {
           العودة للطلبات
         </button>
 
-        {isAdmin && isPending && (
+        {canReview && isPending && (
           <div className="flex gap-2">
             <Button variant="danger" onClick={() => setIsRejectModalOpen(true)}>
               <FiXCircle className="ml-2" />
@@ -223,7 +224,7 @@ const RequestDetail = () => {
         </div>
       )}
 
-      {isAdmin && imagesLoading && (
+      {canReview && imagesLoading && (
         <div className="flex justify-center py-4">
           <Spinner />
         </div>

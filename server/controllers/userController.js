@@ -105,6 +105,19 @@ const unlockAccount = async (req, res, next) => {
   }
 };
 
+/**
+ * Change own password (self-service, public endpoint from Login UI)
+ */
+const changePassword = async (req, res, next) => {
+  try {
+    const { username, currentPassword, newPassword } = req.body;
+    const result = await userService.changePassword(username, currentPassword, newPassword);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   listUsers,
   getUser,
@@ -112,5 +125,6 @@ module.exports = {
   updateUser,
   deleteUser,
   resetPassword,
-  unlockAccount
+  unlockAccount,
+  changePassword
 };

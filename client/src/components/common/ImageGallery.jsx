@@ -11,7 +11,9 @@ import { API_BASE } from '../../constants';
 // Derive backend origin for static files (images are served from root, not /api/v1)
 const BACKEND_URL = API_BASE.replace(/\/api\/v1\/?$/, '');
 
-const ImageGallery = ({ propertyFileNumber, isAdmin = false }) => {
+const ImageGallery = ({ propertyFileNumber, isAdmin = false, isDeptHead = false, onImagesChange }) => {
+  const canDirectAction = isAdmin || isDeptHead;
+  const canRequestAction = !isAdmin; // Admin cannot request delete, but Employee and Dept Head can
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lightboxImage, setLightboxImage] = useState(null);
@@ -36,11 +38,18 @@ const ImageGallery = ({ propertyFileNumber, isAdmin = false }) => {
     try {
       setLoading(true);
       const res = await getPropertyImages(propertyFileNumber);
-      setImages(res.data?.data || []);
+      const fetchedImages = res.data?.data || [];
+      setImages(fetchedImages);
       setSelectedImagesForDeletion([]);
       setSelectionMode(false);
+      if (onImagesChange) {
+        onImagesChange(fetchedImages.length > 0);
+      }
     } catch {
       setImages([]);
+      if (onImagesChange) {
+        onImagesChange(false);
+      }
     } finally {
       setLoading(false);
     }
@@ -141,8 +150,8 @@ const ImageGallery = ({ propertyFileNumber, isAdmin = false }) => {
 
   return (
     <div>
-      {/* Admin: Upload section */}
-      {isAdmin && (
+      {/* Admin/Dept Head: Upload section */}
+      {canDirectAction && (
         <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
           <h3 className="text-sm font-bold text-gray-700 mb-3">رفع صور جديدة</h3>
           <ImageUploader onFilesSelected={setSelectedFiles} />
@@ -163,7 +172,7 @@ const ImageGallery = ({ propertyFileNumber, isAdmin = false }) => {
           <FiImage size={48} className="mb-3 opacity-50" />
           <p className="text-sm">لا توجد صور لهذا العقار</p>
           <p className="text-xs mt-1 text-gray-300">
-            {isAdmin ? 'استخدم النموذج أعلاه لرفع الصور' : `لإضافة صور، ضع الملفات في المجلد: uploads/properties/${propertyFileNumber}/`}
+            {canDirectAction ? 'استخدم النموذج أعلاه لرفع الصور' : `لإضافة صور، ضع الملفات في المجلد: uploads/properties/${propertyFileNumber}/`}
           </p>
         </div>
       ) : (
@@ -171,8 +180,8 @@ const ImageGallery = ({ propertyFileNumber, isAdmin = false }) => {
           <div className="flex justify-between items-center mb-3">
             <p className="text-sm text-gray-500">{images.length} صورة</p>
             
-            {/* Employee: Selection tools */}
-            {!isAdmin && (
+            {/* Employee/Dept Head: Selection tools */}
+            {canRequestAction && (
               <div className="flex gap-2">
                 {selectionMode ? (
                   <>
@@ -247,8 +256,8 @@ const ImageGallery = ({ propertyFileNumber, isAdmin = false }) => {
                     </div>
                   )}
 
-                  {/* Admin: Delete button */}
-                  {isAdmin && (
+                  {/* Admin/Dept Head: Delete button */}
+                  {canDirectAction && (
                     <button
                       onClick={(e) => { e.stopPropagation(); confirmDeleteImage(image); }}
                       className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"

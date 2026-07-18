@@ -123,12 +123,12 @@ const PropertyForm = ({ initialData, onSuccess, onCancel }) => {
           required
         />
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-700">الحالة</label>
+          <label className=" text-gray-700">الحالة</label>
           <select
             name="status"
             value={formData.status}
             onChange={handleChange}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm bg-white"
+            className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
           >
             <option value={PROPERTY_STATUS.TEMPORARY}>مؤقت</option>
             <option value={PROPERTY_STATUS.CERTIFIED}>مصدق</option>

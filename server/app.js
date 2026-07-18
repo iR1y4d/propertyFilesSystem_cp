@@ -23,7 +23,10 @@ const allowedOrigins = process.env.CORS_ORIGIN
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, postman)
+    // In production, reject no-origin requests
+    if (!origin && process.env.NODE_ENV === 'production') {
+      return callback(new Error('CORS: Origin required'), false);
+    }
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
       return callback(null, true);
@@ -38,7 +41,7 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev')); // 
 
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // 300 requests per window per IP
+  max: process.env.NODE_ENV === 'development' ? 10000 : 100, // 10000 in dev, 100 in prod
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -56,8 +59,10 @@ app.use('/api/v1/logs', require('./routes/log.routes.js'));
 app.use('/api/v1/users', require('./routes/user.routes.js'));
 app.use('/api/v1/reports', require('./routes/report.routes.js'));
 
-// Serve uploaded images (static files) — require authentication
-app.use('/uploads', authMiddleware, express.static(path.join(__dirname, 'uploads')));
+const staticAuth = require('./middleware/staticAuth');
+
+// Serve uploaded images (static files) — require authentication (via Bearer token or HttpOnly cookie)
+app.use('/uploads', staticAuth, express.static(path.join(__dirname, 'uploads')));
 
 // Health check
 app.get('/health', async (req, res) => {

@@ -41,6 +41,16 @@ const login = async (username, password) => {
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken({ userId: user.user_id });
 
+  // Store refresh token hash in database (SEC-02)
+  const jwt = require('jsonwebtoken');
+  const crypto = require('crypto');
+  const refreshTokenModel = require('../models/refreshTokenModel');
+  
+  const decodedRefresh = jwt.decode(refreshToken);
+  const expiresAt = new Date(decodedRefresh.exp * 1000);
+  const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+  await refreshTokenModel.create(user.user_id, tokenHash, expiresAt);
+
   // Audit log
   await logModel.createLog({
     userId: user.user_id,
@@ -63,7 +73,14 @@ const login = async (username, password) => {
 /**
  * Handle user logout
  */
-const logout = async (userId) => {
+const logout = async (userId, token) => {
+  if (token) {
+    const crypto = require('crypto');
+    const refreshTokenModel = require('../models/refreshTokenModel');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    await refreshTokenModel.revoke(tokenHash);
+  }
+
   await logModel.createLog({
     userId,
     action: LOG_ACTIONS.LOGOUT
@@ -75,6 +92,16 @@ const logout = async (userId) => {
  */
 const refreshAccessToken = async (token) => {
   try {
+    const crypto = require('crypto');
+    const refreshTokenModel = require('../models/refreshTokenModel');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Check database to see if token is valid and not revoked
+    const activeToken = await refreshTokenModel.findActiveByHash(tokenHash);
+    if (!activeToken) {
+      throw new Error('Refresh token is invalid, expired, or revoked');
+    }
+
     const decoded = verifyToken(token, process.env.JWT_REFRESH_SECRET);
     const user = await userModel.findById(decoded.userId);
 

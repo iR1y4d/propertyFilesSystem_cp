@@ -1,6 +1,7 @@
 const reportService = require('../services/reportService');
 const path = require('path');
 const fs = require('fs');
+const AppError = require('../utils/AppError');
 
 /**
  * Export properties report
@@ -9,7 +10,7 @@ const exportProperties = async (req, res, next) => {
   try {
     const format = req.params.format; // 'pdf' or 'excel'
     if (!['pdf', 'excel'].includes(format)) {
-      throw { statusCode: 400, message: 'صيغة التقرير غير صحيحة، يجب أن تكون pdf أو excel' };
+      throw new AppError(400, 'صيغة التقرير غير صحيحة، يجب أن تكون pdf أو excel');
     }
 
     // Timeout protection for PDF generation (60 seconds)
@@ -40,7 +41,7 @@ const exportLogs = async (req, res, next) => {
   try {
     const format = req.params.format;
     if (!['pdf', 'excel'].includes(format)) {
-      throw { statusCode: 400, message: 'صيغة التقرير غير صحيحة، يجب أن تكون pdf أو excel' };
+      throw new AppError(400, 'صيغة التقرير غير صحيحة، يجب أن تكون pdf أو excel');
     }
     const { userId, action, dateFrom, dateTo } = req.query;
     
@@ -72,7 +73,7 @@ const exportSearchProperties = async (req, res, next) => {
   try {
     const format = req.params.format;
     if (!['pdf', 'excel'].includes(format)) {
-      throw { statusCode: 400, message: 'صيغة التقرير غير صحيحة، يجب أن تكون pdf أو excel' };
+      throw new AppError(400, 'صيغة التقرير غير صحيحة، يجب أن تكون pdf أو excel');
     }
 
     const { search, status, location, propertyFileNumber, ownerName, nationalNumber } = req.query;

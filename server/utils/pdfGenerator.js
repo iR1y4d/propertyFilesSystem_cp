@@ -1,3 +1,4 @@
+
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
@@ -86,6 +87,9 @@ const generatePDF = async (data, title, columns) => {
 <html dir="rtl" lang="ar">
 <head>
   <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
     body {
@@ -97,7 +101,7 @@ const generatePDF = async (data, title, columns) => {
     }
     h1 {
       text-align: center;
-      color: #1a56db;
+      color: #c69c36;
       margin-bottom: 24px;
       font-size: 22px;
     }

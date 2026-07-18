@@ -31,7 +31,8 @@ const login = async (req, res, next) => {
 
 const logout = async (req, res, next) => {
   try {
-    await authService.logout(req.user.userId);
+    const token = req.cookies.refreshToken;
+    await authService.logout(req.user.userId, token);
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

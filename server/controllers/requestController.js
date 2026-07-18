@@ -5,16 +5,7 @@ const requestService = require('../services/requestService');
  */
 const submitRequest = async (req, res, next) => {
   try {
-    // Parse fields that may come as strings from multipart form data
-    let body = { ...req.body };
-    if (typeof body.newData === 'string') {
-      body.newData = JSON.parse(body.newData);
-    }
-    if (typeof body.propertyFileNumber === 'string') {
-      body.propertyFileNumber = parseInt(body.propertyFileNumber, 10);
-    }
-
-    const result = await requestService.submitRequest(req.user.userId, body, req.files);
+    const result = await requestService.submitRequest(req.user.userId, req.body, req.files);
     res.status(201).json({
       success: true,
       data: result,
@@ -49,7 +40,7 @@ const listRequests = async (req, res, next) => {
 const listMyRequests = async (req, res, next) => {
   try {
     const { page, limit, status } = req.query;
-    const result = await requestService.listRequests(req.user, { page, limit, status });
+    const result = await requestService.listRequests(req.user, { page, limit, status, forceOwn: true });
     res.json({
       success: true,
       data: result.requests,

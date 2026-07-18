@@ -21,6 +21,7 @@ import { toast } from 'react-hot-toast';
 const Properties = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === ROLES.ADMIN;
+  const isDeptHead = user?.role === ROLES.DEPARTMENT_HEAD;
 
   const { page, setPage } = usePagination();
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,7 +38,7 @@ const Properties = () => {
   const apiFn = useMemo(() => searchTerm ? searchProperties : getProperties, [searchTerm]);
   const params = useMemo(() => ({ page, limit: 10, ...(searchTerm && { search: searchTerm }) }), [page, searchTerm]);
 
-  const { data, loading, pagination, refetch } = useFetch(apiFn, params);
+  const { data, setData, loading, pagination, refetch } = useFetch(apiFn, params);
 
   const handleSearch = (term) => {
     if (term !== searchTerm) {
@@ -125,21 +126,27 @@ const Properties = () => {
     {
       key: 'actions',
       label: 'إجراءات',
-      render: (row) => (
-        <div className="flex gap-2">
-          {isAdmin ? (
-            <>
-              <Button variant="secondary" size="sm" onClick={() => handleEdit(row)}>تعديل</Button>
+      render: (row) => {
+        const canDirectEdit = isAdmin || isDeptHead;
+        const canRequestEdit = !isAdmin;
+        const canDelete = isAdmin;
+        return (
+          <div className="flex gap-2">
+            {canDirectEdit && (
+              <Button variant="secondary" size="sm" onClick={() => handleEdit(row)}>تعديل مباشر</Button>
+            )}
+            {canRequestEdit && (
+              <Button variant={isDeptHead ? 'outline' : 'secondary'} size="sm" onClick={() => handleEditRequest(row)}>
+                <FiEdit className="ml-2" />
+                طلب تعديل
+              </Button>
+            )}
+            {canDelete && (
               <Button variant="danger" size="sm" onClick={() => handleDeleteClick(row)}>حذف</Button>
-            </>
-          ) : (
-            <Button variant="secondary" size="sm" onClick={() => handleEditRequest(row)}>
-              <FiEdit className="ml-2" />
-              طلب تعديل
-            </Button>
-          )}
-        </div>
-      ),
+            )}
+          </div>
+        );
+      },
     },
   ];
 
@@ -235,7 +242,21 @@ const Properties = () => {
               <button onClick={() => setIsImageModalOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-2xl">&times;</button>
             </div>
             <div className="p-8">
-              <ImageGallery propertyFileNumber={imageProperty.property_file_number} isAdmin={isAdmin} />
+              <ImageGallery 
+                propertyFileNumber={imageProperty.property_file_number} 
+                isAdmin={isAdmin} 
+                isDeptHead={isDeptHead} 
+                onImagesChange={(hasImages) => {
+                  setData(prevData => {
+                    if (!prevData) return prevData;
+                    return prevData.map(p => 
+                      p.property_file_number === imageProperty.property_file_number
+                        ? { ...p, has_images: hasImages }
+                        : p
+                    );
+                  });
+                }}
+              />
             </div>
           </div>
         </div>

@@ -4,12 +4,12 @@ import { ROLES } from '../../constants';
 import { FiHome, FiFileText, FiSend, FiUsers, FiList, FiBarChart2, FiLogOut } from 'react-icons/fi';
 
 const navItems = [
-  { to: '/', label: 'لوحة التحكم', icon: FiHome, roles: [ROLES.ADMIN, ROLES.EMPLOYEE] },
-  { to: '/properties', label: 'العقارات', icon: FiFileText, roles: [ROLES.ADMIN, ROLES.EMPLOYEE] },
-  { to: '/requests', label: 'الطلبات', icon: FiSend, roles: [ROLES.ADMIN, ROLES.EMPLOYEE] },
+  { to: '/', label: 'لوحة التحكم', icon: FiHome, roles: [ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.DEPARTMENT_HEAD] },
+  { to: '/properties', label: 'العقارات', icon: FiFileText, roles: [ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.DEPARTMENT_HEAD] },
+  { to: '/requests', label: 'الطلبات', icon: FiSend, roles: [ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.DEPARTMENT_HEAD] },
   { to: '/users', label: 'المستخدمين', icon: FiUsers, roles: [ROLES.ADMIN] },
   { to: '/logs', label: 'سجل التدقيق', icon: FiList, roles: [ROLES.ADMIN] },
-  { to: '/reports', label: 'التقارير', icon: FiBarChart2, roles: [ROLES.ADMIN, ROLES.EMPLOYEE] },
+  { to: '/reports', label: 'التقارير', icon: FiBarChart2, roles: [ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.DEPARTMENT_HEAD] },
 ];
 
 const Sidebar = () => {

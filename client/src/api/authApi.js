@@ -18,4 +18,7 @@ export const refreshTokenApi = async () => {
   setAccessToken(data.data.accessToken);
   return data.data;
 };
-
+export const changePasswordApi = async (username, currentPassword, newPassword, confirmPassword) => {
+  const { data } = await api.patch('/auth/change-password', { username, currentPassword, newPassword, confirmPassword });
+  return data;
+};

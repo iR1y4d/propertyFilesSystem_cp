@@ -3,6 +3,7 @@ module.exports = {
   ROLES: {
     ADMIN: 'مدير',
     EMPLOYEE: 'موظف',
+    DEPARTMENT_HEAD: 'رئيس قسم',
   },
 
   // Property statuses
@@ -44,7 +45,7 @@ module.exports = {
   // Security
   MAX_LOGIN_ATTEMPTS: parseInt(process.env.MAX_LOGIN_ATTEMPTS, 10) || 5,
   BCRYPT_SALT_ROUNDS: parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12,
-  ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY || '15m',
+  ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY || '5m',
   REFRESH_TOKEN_EXPIRY: process.env.REFRESH_TOKEN_EXPIRY || '7d',
 
   // Pagination defaults

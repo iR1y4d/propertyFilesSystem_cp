@@ -49,12 +49,21 @@ const count = async ({ status, userId }) => {
 /**
  * Find own requests (Employee)
  */
-const findByUser = async (userId, { page = 1, limit = 20 }) => {
+const findByUser = async (userId, { page = 1, limit = 20, status }) => {
   const offset = (page - 1) * limit;
-  const result = await query(
-    'SELECT * FROM edit_requests WHERE requested_by = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3',
-    [userId, limit, offset]
-  );
+  let sql = 'SELECT * FROM edit_requests WHERE requested_by = $1';
+  const params = [userId];
+  let paramIdx = 2;
+
+  if (status) {
+    sql += ` AND status = $${paramIdx++}`;
+    params.push(status);
+  }
+
+  sql += ` ORDER BY created_at DESC LIMIT $${paramIdx++} OFFSET $${paramIdx++}`;
+  params.push(limit, offset);
+
+  const result = await query(sql, params);
   return result.rows;
 };
 
@@ -64,7 +73,7 @@ const findByUser = async (userId, { page = 1, limit = 20 }) => {
 const findById = async (id, client) => {
   const q = client ? client.query.bind(client) : query;
   const queryText = client
-    ? 'SELECT r.*, u.username as requester_name FROM edit_requests r LEFT JOIN users u ON r.requested_by = u.user_id WHERE r.request_id = $1 FOR UPDATE'
+    ? 'SELECT r.*, u.username as requester_name FROM edit_requests r LEFT JOIN users u ON r.requested_by = u.user_id WHERE r.request_id = $1 FOR UPDATE OF r'
     : 'SELECT r.*, u.username as requester_name FROM edit_requests r LEFT JOIN users u ON r.requested_by = u.user_id WHERE r.request_id = $1';
   const result = await q(queryText, [id]);
   return result.rows[0];

@@ -13,7 +13,13 @@ const MAX_FILES = 20; // 20 files
 const createUpload = (destinationResolver) => {
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-      const dest = destinationResolver(req);
+      // Cache the resolved destination per request so all files in a
+      // single upload go to the same directory (the resolver may use
+      // Date.now() which would differ between per-file invocations).
+      if (!req._uploadDest) {
+        req._uploadDest = destinationResolver(req);
+      }
+      const dest = req._uploadDest;
       fs.mkdirSync(dest, { recursive: true });
       cb(null, dest);
     },

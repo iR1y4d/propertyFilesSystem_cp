@@ -16,14 +16,18 @@ import { useNavigate } from 'react-router-dom';
 const Requests = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === ROLES.ADMIN;
+  const isDeptHead = user?.role === ROLES.DEPARTMENT_HEAD;
   const navigate = useNavigate();
 
   const { page, setPage } = usePagination();
   const [statusFilter, setStatusFilter] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(isDeptHead ? 'all' : (isAdmin ? 'all' : 'my'));
+
+  const fetchFn = activeTab === 'all' ? getRequests : getMyRequests;
 
   const { data, loading, pagination, refetch } = useFetch(
-    isAdmin ? getRequests : getMyRequests,
+    fetchFn,
     { page, limit: 10, ...(statusFilter && { status: statusFilter }) }
   );
 
@@ -44,25 +48,54 @@ const Requests = () => {
     },
   ];
 
-  if (isAdmin) {
+  if (activeTab === 'all') {
     columns.splice(2, 0, { key: 'requester_name', label: 'المقدم' });
   }
+
+  const showSubmitBtn = user?.role === ROLES.EMPLOYEE || user?.role === ROLES.DEPARTMENT_HEAD;
+  const pageTitle = activeTab === 'all' ? 'طلبات التعديل' : 'طلباتي';
+  const pageSubtitle = activeTab === 'all' ? 'متابعة ومراجعة طلبات الإضافة والتعديل والحذف' : 'متابعة طلبات الإضافة والتعديل والحذف الخاصة بي';
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">{isAdmin ? 'طلبات التعديل' : 'طلباتي'}</h1>
-          <p className="text-gray-500 text-lg mt-2">متابعة طلبات الإضافة والتعديل والحذف</p>
+          <h1 className="text-3xl font-bold text-gray-800">{pageTitle}</h1>
+          <p className="text-gray-500 text-lg mt-2">{pageSubtitle}</p>
         </div>
         
-        {!isAdmin && (
+        {showSubmitBtn && (
           <Button onClick={() => setIsFormOpen(true)}>
             <FiPlus className="ml-2" />
             تقديم طلب جديد
           </Button>
         )}
       </div>
+
+      {isDeptHead && (
+        <div className="flex border-b border-gray-200 gap-6">
+          <button
+            className={`py-3 px-4 text-base font-bold border-b-2 transition-all cursor-pointer ${
+              activeTab === 'all'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}
+            onClick={() => { setActiveTab('all'); setPage(1); }}
+          >
+            طلبات الموظفين للمراجعة
+          </button>
+          <button
+            className={`py-3 px-4 text-base font-bold border-b-2 transition-all cursor-pointer ${
+              activeTab === 'my'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}
+            onClick={() => { setActiveTab('my'); setPage(1); }}
+          >
+            طلباتي الخاصة
+          </button>
+        </div>
+      )}
 
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
         <FiFilter className="text-gray-400" size={20} />

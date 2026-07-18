@@ -2,7 +2,8 @@ import { FiFileText } from 'react-icons/fi';
 
 export const ROLES = {
   ADMIN: 'مدير',
-  EMPLOYEE: 'موظف'
+  EMPLOYEE: 'موظف',
+  DEPARTMENT_HEAD: 'رئيس قسم'
 };
 
 export const PRINTABLE_FORMS = [
@@ -63,6 +64,7 @@ export const STATUS_COLORS = {
   'مرفوض': 'bg-red-100 text-red-800',
   'مدير': 'bg-purple-100 text-purple-800',
   'موظف': 'bg-indigo-100 text-indigo-800',
+  'رئيس قسم': 'bg-pink-100 text-pink-800',
   'تسجيل_دخول': 'bg-blue-100 text-blue-800',
   'تسجيل_خروج': 'bg-gray-100 text-gray-800',
   'إضافة': 'bg-green-100 text-green-800',

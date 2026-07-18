@@ -35,7 +35,7 @@ const useFetch = (apiFn, params = {}, autoFetch = true) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoFetch, fetch, paramsKey]);
 
-  return { data, loading, error, pagination, refetch: fetch };
+  return { data, setData, loading, error, pagination, refetch: fetch };
 };
 
 export default useFetch;

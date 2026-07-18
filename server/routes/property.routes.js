@@ -12,18 +12,18 @@ const pagination = require('../middleware/pagination');
 // Apply auth to all routes
 router.use(authMiddleware);
 
-// List properties (Admin and Employee)
-router.get('/', authorize(ROLES.ADMIN, ROLES.EMPLOYEE), pagination, propertyController.listProperties);
+// List properties (Admin, Employee and Department Head)
+router.get('/', authorize(ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.DEPARTMENT_HEAD), pagination, propertyController.listProperties);
 
 // Search properties (Logged)
-router.get('/search', authorize(ROLES.ADMIN, ROLES.EMPLOYEE), pagination, propertyController.searchProperties);
+router.get('/search', authorize(ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.DEPARTMENT_HEAD), pagination, propertyController.searchProperties);
 
-// Get property detail (Admin and Employee)
-router.get('/:fileNumber', authorize(ROLES.ADMIN, ROLES.EMPLOYEE), propertyController.getProperty);
+// Get property detail (Admin, Employee and Department Head)
+router.get('/:fileNumber', authorize(ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.DEPARTMENT_HEAD), propertyController.getProperty);
 
-// Admin only routes
+// Direct property modification (Admin and Department Head)
 router.post('/', authorize(ROLES.ADMIN), validate(createPropertySchema), propertyController.createProperty);
-router.put('/:fileNumber', authorize(ROLES.ADMIN), validate(updatePropertySchema), propertyController.updateProperty);
+router.put('/:fileNumber', authorize(ROLES.ADMIN, ROLES.DEPARTMENT_HEAD), validate(updatePropertySchema), propertyController.updateProperty);
 router.delete('/:fileNumber', authorize(ROLES.ADMIN), propertyController.deleteProperty);
 
 module.exports = router;

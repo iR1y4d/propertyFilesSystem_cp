@@ -1,6 +1,6 @@
 const userModel = require('../models/userModel');
 const logModel = require('../models/logModel');
-const { hashPassword } = require('../utils/passwordUtils');
+const { hashPassword, comparePassword } = require('../utils/passwordUtils');
 const { LOG_ACTIONS } = require('../config/constants');
 const AppError = require('../utils/AppError');
 
@@ -146,6 +146,32 @@ const unlockAccount = async (adminUserId, userId) => {
   return { success: true, message: 'تم إلغاء قفل الحساب بنجاح' };
 };
 
+const changePassword = async (username, currentPassword, newPassword) => {
+  const user = await userModel.findByUsername(username);
+  if (!user) {
+    throw new AppError(404, 'المستخدم غير موجود');
+  }
+
+  // Verify current password
+  const isValid = await comparePassword(currentPassword, user.password_hash);
+  if (!isValid) {
+    throw new AppError(400, 'كلمة المرور الحالية غير صحيحة');
+  }
+
+  // Hash and save new password
+  const passwordHash = await hashPassword(newPassword);
+  await userModel.resetPassword(user.user_id, passwordHash);
+
+  // Log action
+  await logModel.createLog({
+    userId: user.user_id,
+    action: LOG_ACTIONS.EDIT,
+    target: `Password changed by user: ${user.username}`
+  });
+
+  return { success: true, message: 'تم تغيير كلمة المرور بنجاح' };
+};
+
 module.exports = {
   listUsers,
   getUser,
@@ -153,5 +179,6 @@ module.exports = {
   updateUser,
   deleteUser,
   resetPassword,
-  unlockAccount
+  unlockAccount,
+  changePassword
 };

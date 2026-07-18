@@ -27,14 +27,16 @@ const listProperties = async (user, { page = 1, limit = 20, status, location, pr
     return p;
   });
 
-  // Enrich properties with has_images flag from filesystem asynchronously (PERF-01)
-  const enrichedProperties = await Promise.all(
-    filteredProperties.map(async (p) => {
-      if (p.is_restricted) return p;
-      const has_images = await imageService.hasImages(p.property_file_number);
-      return { ...p, has_images };
-    })
-  );
+  // Enrich properties with has_images flag from filesystem in a single batch (PERF-01)
+  const fileNumbers = filteredProperties
+    .filter(p => !p.is_restricted)
+    .map(p => p.property_file_number);
+  const imagesStatus = await imageService.hasImagesBatch(fileNumbers);
+
+  const enrichedProperties = filteredProperties.map(p => {
+    if (p.is_restricted) return p;
+    return { ...p, has_images: !!imagesStatus[p.property_file_number] };
+  });
 
   return {
     properties: enrichedProperties,

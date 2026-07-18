@@ -16,6 +16,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.role === ROLES.ADMIN;
+  const isDeptHead = user?.role === ROLES.DEPARTMENT_HEAD;
 
   const [stats, setStats] = useState({
     totalProperties: 0,
@@ -50,6 +51,24 @@ const Dashboard = () => {
           if (logsRes.status === 'fulfilled') {
             setRecentData(logsRes.value.data.data || []);
           }
+        } else if (isDeptHead) {
+          const [pendingRes, approvedRes, reviewRes, recentRes] = await Promise.allSettled([
+            getMyRequests({ status: 'في الانتظار', limit: 1 }),
+            getMyRequests({ status: 'مقبول', limit: 1 }),
+            getRequests({ status: 'في الانتظار', limit: 1 }),
+            getMyRequests({ limit: 5 }),
+          ]);
+
+          setStats(prev => ({
+            ...prev,
+            myPending: pendingRes.status === 'fulfilled' ? pendingRes.value.data.pagination?.totalCount || 0 : 0,
+            myApproved: approvedRes.status === 'fulfilled' ? approvedRes.value.data.pagination?.totalCount || 0 : 0,
+            pendingRequests: reviewRes.status === 'fulfilled' ? reviewRes.value.data.pagination?.totalCount || 0 : 0,
+          }));
+
+          if (recentRes.status === 'fulfilled') {
+            setRecentData(recentRes.value.data.data || []);
+          }
         } else {
           const [pendingRes, approvedRes, recentRes] = await Promise.allSettled([
             getMyRequests({ status: 'في الانتظار', limit: 1 }),
@@ -75,7 +94,7 @@ const Dashboard = () => {
     };
 
     fetchStats();
-  }, [isAdmin]);
+  }, [isAdmin, isDeptHead]);
 
   if (loading) return <Spinner fullScreen />;
 
@@ -85,12 +104,18 @@ const Dashboard = () => {
     { label: 'المستخدمين', value: stats.totalUsers, icon: FiUsers, color: 'bg-green-500', path: '/users' },
   ];
 
+  const deptHeadCards = [
+    { label: 'طلباتي المعلقة', value: stats.myPending, icon: FiActivity, color: 'bg-yellow-500', path: '/requests' },
+    { label: 'طلباتي المقبولة', value: stats.myApproved, icon: FiSend, color: 'bg-green-500', path: '/requests' },
+    { label: 'طلبات معلقة للمراجعة', value: stats.pendingRequests, icon: FiSend, color: 'bg-blue-500', path: '/requests' },
+  ];
+
   const employeeCards = [
     { label: 'طلباتي المعلقة', value: stats.myPending, icon: FiActivity, color: 'bg-yellow-500', path: '/requests' },
     { label: 'طلباتي المقبولة', value: stats.myApproved, icon: FiSend, color: 'bg-green-500', path: '/requests' },
   ];
 
-  const cards = isAdmin ? adminCards : employeeCards;
+  const cards = isAdmin ? adminCards : (isDeptHead ? deptHeadCards : employeeCards);
 
   const logColumns = [
     { key: 'action', label: 'الإجراء', render: (row) => <Badge status={row.action} /> },

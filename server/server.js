@@ -9,7 +9,8 @@ if (!process.env.DATABASE_URL) {
   console.error('❌ [Error] DATABASE_URL is not set! Database connection will fail.');
 }
 if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) {
-  console.warn('⚠️ [Warning] JWT secrets are not set! User authentication/login will fail.');
+  console.error('❌ FATAL: JWT secrets are not set! Application will shut down.');
+  process.exit(1);
 }
 
 const server = app.listen(PORT, "0.0.0.0", () => {

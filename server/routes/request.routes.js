@@ -19,14 +19,14 @@ const tempUploadDest = (req) =>
 const pagination = require('../middleware/pagination');
 
 // Routes
-router.get('/', authorize(ROLES.ADMIN), pagination, requestController.listRequests);
-router.get('/my', authorize(ROLES.EMPLOYEE), pagination, requestController.listMyRequests);
-router.get('/:id', authorize(ROLES.ADMIN, ROLES.EMPLOYEE), requestController.getRequest);
+router.get('/', authorize(ROLES.ADMIN, ROLES.DEPARTMENT_HEAD), pagination, requestController.listRequests);
+router.get('/my', authorize(ROLES.EMPLOYEE, ROLES.DEPARTMENT_HEAD), pagination, requestController.listMyRequests);
+router.get('/:id', authorize(ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.DEPARTMENT_HEAD), requestController.getRequest);
 
 // Employee submits a request (with optional image uploads via multipart/form-data)
 router.post(
   '/',
-  authorize(ROLES.EMPLOYEE),
+  authorize(ROLES.EMPLOYEE, ROLES.DEPARTMENT_HEAD),
   createUpload(tempUploadDest),
   // Parse string fields from multipart before Zod validation
   (req, res, next) => {
@@ -46,9 +46,9 @@ router.post(
   requestController.submitRequest
 );
 
-// Admin only routes
-router.patch('/:id/approve', authorize(ROLES.ADMIN), requestController.approveRequest);
-router.patch('/:id/reject', authorize(ROLES.ADMIN), requestController.rejectRequest);
+// Admin and Department Head routes
+router.patch('/:id/approve', authorize(ROLES.ADMIN, ROLES.DEPARTMENT_HEAD), requestController.approveRequest);
+router.patch('/:id/reject', authorize(ROLES.ADMIN, ROLES.DEPARTMENT_HEAD), requestController.rejectRequest);
 
 // Cleanup middleware for errors during request creation
 router.use((err, req, res, next) => {

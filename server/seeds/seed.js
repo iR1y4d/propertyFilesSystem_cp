@@ -28,6 +28,15 @@ const seed = async () => {
     );
     console.log(`✅ Employee user created (password: ${process.env.SEED_EMPLOYEE_PASSWORD ? '********' : 'Employee@2026'})`);
 
+    // 3. Create Department Head User
+    const deptHeadRaw = process.env.SEED_DEPT_HEAD_PASSWORD || 'Head@2026';
+    const deptHeadPassword = await hashPassword(deptHeadRaw);
+    await query(
+      'INSERT INTO users (first_name, last_name, username, password_hash, role) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (username) DO NOTHING',
+      ['رئيس', 'قسم', 'head1', deptHeadPassword, ROLES.DEPARTMENT_HEAD]
+    );
+    console.log(`✅ Department Head user created (password: ${process.env.SEED_DEPT_HEAD_PASSWORD ? '********' : 'Head@2026'})`);
+
     // 3. Create Sample Properties — using 12-digit national numbers to pass validators
     const properties = [
       [1001, 'أحمد صالح', 123456789012, 'عمان - شارع الاستقلال', '120م', PROPERTY_STATUS.CERTIFIED],

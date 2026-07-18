@@ -96,6 +96,21 @@ const hasImages = async (propertyFileNumber) => {
 };
 
 /**
+ * Check if multiple properties have images in a batch (parallelised) (PERF-01)
+ * @param {Array<number|string>} fileNumbers
+ * @returns {Promise<Record<string|number, boolean>>} Map of fileNumber -> hasImages
+ */
+const hasImagesBatch = async (fileNumbers) => {
+  const results = {};
+  await Promise.all(
+    fileNumbers.map(async (num) => {
+      results[num] = await hasImages(num);
+    })
+  );
+  return results;
+};
+
+/**
  * Delete a single image from a property's folder.
  * @param {number|string} propertyFileNumber
  * @param {string} filename
@@ -186,6 +201,7 @@ const getPendingImages = async (requestId) => {
 module.exports = {
   getImages,
   hasImages,
+  hasImagesBatch,
   deleteImage,
   movePendingImages,
   deletePendingImages,

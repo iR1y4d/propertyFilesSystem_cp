@@ -25,6 +25,18 @@ const findById = async (userId) => {
 };
 
 /**
+ * Find user by ID including password hash (for password verification)
+ * @param {number} userId 
+ */
+const findByIdWithPassword = async (userId) => {
+  const result = await query(
+    'SELECT user_id, username, password_hash FROM users WHERE user_id = $1 AND deleted_at IS NULL',
+    [userId]
+  );
+  return result.rows[0];
+};
+
+/**
  * Increment failed login attempts
  * @param {number} userId 
  */
@@ -153,6 +165,7 @@ const resetPassword = async (userId, passwordHash) => {
 module.exports = {
   findByUsername,
   findById,
+  findByIdWithPassword,
   incrementFailedAttempts,
   resetFailedAttempts,
   lockAccount,

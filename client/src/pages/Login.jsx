@@ -5,12 +5,14 @@ import { useAuth } from '../hooks/useAuth';
 import Input from '../components/common/Input';
 import Button from '../components/common/Button';
 import toast from 'react-hot-toast';
+import ChangePasswordForm from '../components/forms/ChangePasswordForm';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const navigate = useNavigate();
   const { login, user } = useAuth();
 
@@ -49,36 +51,51 @@ const Login = () => {
       <div className="bg-surface rounded-2xl shadow-2xl p-10 w-full max-w-md ">
         {/* Logo / Title */}
         <div className="text-center mb-10">
-          {/* <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-5">
-            <span className="text-4xl">🏛️</span>
-          </div> */}
           <img src="logo.png" alt="" className="mx-auto" />
           <h1 className="text-3xl font-bold text-text">نظام إدارة الملفات العقارية</h1>
           <p className="text-text-light text-base mt-2">هيئة التسجيل العقاري</p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <Input
-            id="username"
-            label="اسم المستخدم"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            error={errors.username}
-            autoFocus
-
-          />
-          <Input
-            id="password"
-            label="كلمة المرور"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            error={errors.password}
-          />
-          <Button type="submit" loading={loading} className="w-full mt-6">
-            تسجيل الدخول
-          </Button>
-        </form>
+        {showChangePassword ? (
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">تغيير كلمة المرور</h2>
+            <ChangePasswordForm
+              onSuccess={() => setShowChangePassword(false)}
+              onCancel={() => setShowChangePassword(false)}
+            />
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <Input
+              id="username"
+              label="اسم المستخدم"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              error={errors.username}
+              autoFocus
+            />
+            <Input
+              id="password"
+              label="كلمة المرور"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              error={errors.password}
+            />
+            <Button type="submit" loading={loading} className="w-full mt-6">
+              تسجيل الدخول
+            </Button>
+            <div className="text-center mt-6">
+              <button
+                type="button"
+                onClick={() => setShowChangePassword(true)}
+                className="text-primary hover:text-primary-dark font-medium text-sm transition-colors cursor-pointer"
+              >
+                تغيير كلمة المرور؟
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

@@ -150,19 +150,19 @@ const rejectRequest = async (adminUserId, requestId) => {
 /**
  * List requests
  */
-const listRequests = async (user, { page = 1, limit = 20, status }) => {
+const listRequests = async (user, { page = 1, limit = 20, status, forceOwn = false }) => {
   let requests;
   let totalCount;
 
-  if (user.role === ROLES.ADMIN) {
+  if ((user.role === ROLES.ADMIN || user.role === ROLES.DEPARTMENT_HEAD) && !forceOwn) {
     [requests, totalCount] = await Promise.all([
       requestModel.findAll({ page, limit, status }),
       requestModel.count({ status })
     ]);
   } else {
     [requests, totalCount] = await Promise.all([
-      requestModel.findByUser(user.userId, { page, limit }),
-      requestModel.count({ userId: user.userId })
+      requestModel.findByUser(user.userId, { page, limit, status }),
+      requestModel.count({ userId: user.userId, status })
     ]);
   }
 
@@ -185,8 +185,8 @@ const getRequest = async (user, id) => {
   if (!request) {
     throw new AppError(404, 'الطلب غير موجود');
   }
-  // Employees can only view their own requests
-  if (user.role !== ROLES.ADMIN && request.requested_by !== user.userId) {
+  // Employees can only view their own requests, whereas Admin and Department Head can view all
+  if (user.role !== ROLES.ADMIN && user.role !== ROLES.DEPARTMENT_HEAD && request.requested_by !== user.userId) {
     throw new AppError(403, 'لا تملك صلاحية عرض هذا الطلب');
   }
   return request;

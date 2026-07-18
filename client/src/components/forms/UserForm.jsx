@@ -28,8 +28,18 @@ const UserForm = ({ initialData, onSuccess, onCancel }) => {
     if (!formData.firstName) newErrors.firstName = 'الاسم الأول مطلوب';
     if (!formData.lastName) newErrors.lastName = 'الاسم الأخير مطلوب';
     if (!formData.username || formData.username.length < 3) newErrors.username = 'اسم المستخدم قصير جداً';
-    if (!isEdit && (!formData.password || formData.password.length < 8)) {
-      newErrors.password = 'كلمة المرور يجب أن تكون 8 خانات على الأقل';
+    if (!isEdit) {
+      if (!formData.password) {
+        newErrors.password = 'كلمة المرور مطلوبة';
+      } else if (formData.password.length < 8) {
+        newErrors.password = 'كلمة المرور يجب أن تكون 8 خانات على الأقل';
+      } else if (!/[A-Z]/.test(formData.password)) {
+        newErrors.password = 'يجب أن تحتوي كلمة المرور على حرف كبير واحد على الأقل';
+      } else if (!/[0-9]/.test(formData.password)) {
+        newErrors.password = 'يجب أن تحتوي كلمة المرور على رقم واحد على الأقل';
+      } else if (!/[^A-Za-z0-9]/.test(formData.password)) {
+        newErrors.password = 'يجب أن تحتوي كلمة المرور على رمز خاص واحد على الأقل';
+      }
     }
     
     setErrors(newErrors);
@@ -51,7 +61,17 @@ const UserForm = ({ initialData, onSuccess, onCancel }) => {
       }
       onSuccess();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'حدث خطأ ما');
+      if (error.response?.data?.errors) {
+        const serverErrors = {};
+        error.response.data.errors.forEach((err) => {
+          const fieldName = err.field.replace('body.', '');
+          serverErrors[fieldName] = err.message;
+        });
+        setErrors(serverErrors);
+        toast.error(error.response.data.message || 'خطأ في التحقق من البيانات');
+      } else {
+        toast.error(error.response?.data?.message || 'حدث خطأ ما');
+      }
     } finally {
       setLoading(false);
     }
@@ -86,15 +106,20 @@ const UserForm = ({ initialData, onSuccess, onCancel }) => {
           required
         />
         {!isEdit && (
-          <Input
-            label="كلمة المرور"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            error={errors.password}
-            required
-          />
+          <div>
+            <Input
+              label="كلمة المرور"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              error={errors.password}
+              required
+            />
+            <p className="text-xs text-gray-500 -mt-4 mb-4">
+              يجب أن تحتوي على 8 خانات على الأقل، تشمل حرفاً كبيراً، رقماً، ورمزاً خاصاً.
+            </p>
+          </div>
         )}
         <div className="flex flex-col gap-1">
           <label>الدور</label>
@@ -106,6 +131,7 @@ const UserForm = ({ initialData, onSuccess, onCancel }) => {
           >
             <option value={ROLES.EMPLOYEE}>موظف</option>
             <option value={ROLES.ADMIN}>مدير</option>
+            <option value={ROLES.DEPARTMENT_HEAD}>رئيس قسم</option>
           </select>
         </div>
       </div>
