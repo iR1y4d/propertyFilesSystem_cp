@@ -32,7 +32,7 @@ const EditRequestForm = ({ property, onSuccess, onCancel }) => {
     if (!formData.nationalNumber || String(formData.nationalNumber).length !== 12) newErrors.nationalNumber = 'الرقم الوطني يجب أن يكون 12 رقم';
     if (!formData.location) newErrors.location = 'الموقع مطلوب';
     if (!formData.area) newErrors.area = 'المساحة مطلوبة';
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -126,12 +126,12 @@ const EditRequestForm = ({ property, onSuccess, onCancel }) => {
           required
         />
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-text mb-1">الحالة</label>
+          <label >الحالة</label>
           <select
             name="status"
             value={formData.status}
             onChange={handleChange}
-            className="block w-full px-4 py-2 bg-surface border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all duration-200"
+            className="block w-full px-4 py-3 bg-surface border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all duration-200"
           >
             <option value={PROPERTY_STATUS.TEMPORARY}>مؤقت</option>
             <option value={PROPERTY_STATUS.CERTIFIED}>مصدق</option>
@@ -147,11 +147,10 @@ const EditRequestForm = ({ property, onSuccess, onCancel }) => {
           value={formData.requestDescription}
           onChange={handleChange}
           placeholder="اشرح سبب التعديل أو التغييرات التي أجريتها (اختياري)..."
-          className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all duration-200 min-h-[100px] ${
-            errors.requestDescription
-              ? 'border-danger focus:ring-danger/30'
-              : 'border-border focus:ring-accent/30 focus:border-accent'
-          }`}
+          className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all duration-200 min-h-[100px] ${errors.requestDescription
+            ? 'border-danger focus:ring-danger/30'
+            : 'border-border focus:ring-accent/30 focus:border-accent'
+            }`}
         ></textarea>
         {errors.requestDescription && <p className="mt-1 text-xs text-danger">{errors.requestDescription}</p>}
       </div>

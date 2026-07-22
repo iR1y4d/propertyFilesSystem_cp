@@ -33,7 +33,7 @@ const PropertyForm = ({ initialData, onSuccess, onCancel }) => {
     if (!formData.nationalNumber || String(formData.nationalNumber).length !== 12) newErrors.nationalNumber = 'الرقم الوطني يجب أن يكون 12 رقم';
     if (!formData.location) newErrors.location = 'الموقع مطلوب';
     if (!formData.area) newErrors.area = 'المساحة مطلوبة';
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -148,7 +148,7 @@ const PropertyForm = ({ initialData, onSuccess, onCancel }) => {
           إلغاء
         </Button>
         <Button type="submit" loading={loading}>
-          {isEdit ? 'تحديث البيانات' : 'إضافة العقار'}
+          {isEdit ? 'تحديث البيانات' : 'إضافة الملف العقاري'}
         </Button>
       </div>
     </form>

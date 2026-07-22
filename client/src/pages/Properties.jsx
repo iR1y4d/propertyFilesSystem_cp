@@ -70,10 +70,10 @@ const Properties = () => {
   const confirmDelete = async () => {
     try {
       await deleteProperty(propertyToDelete.property_file_number);
-      toast.success('تم حذف العقار بنجاح');
+      toast.success('تم حذف الملف العقاري بنجاح');
       refetch();
     } catch (error) {
-      toast.error('فشل حذف العقار');
+      toast.error('فشل حذف الملف العقاري');
     } finally {
       setIsDeleteModalOpen(false);
       setPropertyToDelete(null);
@@ -109,11 +109,10 @@ const Properties = () => {
       render: (row) => (
         <button
           onClick={() => handleViewImages(row)}
-          className={`flex items-center gap-1 transition-colors ${
-            row.has_images
-              ? 'text-blue-600 hover:text-blue-800'
-              : 'text-gray-300 hover:text-gray-500'
-          }`}
+          className={`flex items-center gap-1 transition-colors ${row.has_images
+            ? 'text-blue-600 hover:text-blue-800'
+            : 'text-gray-300 hover:text-gray-500'
+            }`}
           title={row.has_images ? 'عرض الصور' : 'لا توجد صور'}
         >
           <FiImage size={18} />
@@ -157,11 +156,11 @@ const Properties = () => {
           <h1 className="text-3xl font-bold text-gray-800">إدارة العقارات</h1>
           <p className="text-gray-500 text-lg mt-2">البحث والتحكم في ملفات العقارات</p>
         </div>
-        
+
         {isAdmin && (
           <Button onClick={() => { setSelectedProperty(null); setIsFormOpen(true); }}>
             <FiPlus className="ml-2" />
-            إضافة عقار جديد
+            إضافة ملف عقاري جديد
           </Button>
         )}
       </div>
@@ -242,14 +241,14 @@ const Properties = () => {
               <button onClick={() => setIsImageModalOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-2xl">&times;</button>
             </div>
             <div className="p-8">
-              <ImageGallery 
-                propertyFileNumber={imageProperty.property_file_number} 
-                isAdmin={isAdmin} 
-                isDeptHead={isDeptHead} 
+              <ImageGallery
+                propertyFileNumber={imageProperty.property_file_number}
+                isAdmin={isAdmin}
+                isDeptHead={isDeptHead}
                 onImagesChange={(hasImages) => {
                   setData(prevData => {
                     if (!prevData) return prevData;
-                    return prevData.map(p => 
+                    return prevData.map(p =>
                       p.property_file_number === imageProperty.property_file_number
                         ? { ...p, has_images: hasImages }
                         : p
