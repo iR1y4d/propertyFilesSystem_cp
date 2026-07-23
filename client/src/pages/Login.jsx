@@ -40,7 +40,7 @@ const Login = () => {
       navigate('/', { replace: true });
     } catch (err) {
       const msg = err.response?.data?.message || 'حدث خطأ في تسجيل الدخول';
-      toast.error(msg);
+      setErrors(prev => ({ ...prev, general: msg }));
     } finally {
       setLoading(false);
     }
@@ -70,7 +70,7 @@ const Login = () => {
               id="username"
               label="اسم المستخدم"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => { setUsername(e.target.value); setErrors(prev => ({ ...prev, general: '' })); }}
               error={errors.username}
               autoFocus
             />
@@ -79,9 +79,14 @@ const Login = () => {
               label="كلمة المرور"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => { setPassword(e.target.value); setErrors(prev => ({ ...prev, general: '' })); }}
               error={errors.password}
             />
+            {errors.general && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                <p className="text-sm text-red-600 font-medium">{errors.general}</p>
+              </div>
+            )}
             <Button type="submit" loading={loading} className="w-full mt-6">
               تسجيل الدخول
             </Button>

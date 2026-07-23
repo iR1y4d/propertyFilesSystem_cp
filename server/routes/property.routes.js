@@ -22,8 +22,8 @@ router.get('/search', authorize(ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.DEPARTMENT_HE
 router.get('/:fileNumber', authorize(ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.DEPARTMENT_HEAD), propertyController.getProperty);
 
 // Direct property modification (Admin and Department Head)
-router.post('/', authorize(ROLES.ADMIN), validate(createPropertySchema), propertyController.createProperty);
+router.post('/', authorize(ROLES.ADMIN, ROLES.DEPARTMENT_HEAD), validate(createPropertySchema), propertyController.createProperty);
 router.put('/:fileNumber', authorize(ROLES.ADMIN, ROLES.DEPARTMENT_HEAD), validate(updatePropertySchema), propertyController.updateProperty);
-router.delete('/:fileNumber', authorize(ROLES.ADMIN), propertyController.deleteProperty);
+router.delete('/:fileNumber', authorize(ROLES.ADMIN, ROLES.DEPARTMENT_HEAD), propertyController.deleteProperty);
 
 module.exports = router;

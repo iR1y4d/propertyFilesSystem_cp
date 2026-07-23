@@ -52,7 +52,8 @@ const Dashboard = () => {
             setRecentData(logsRes.value.data.data || []);
           }
         } else if (isDeptHead) {
-          const [pendingRes, approvedRes, reviewRes, recentRes] = await Promise.allSettled([
+          const [propsRes, pendingRes, approvedRes, reviewRes, recentRes] = await Promise.allSettled([
+            getProperties({ limit: 1 }),
             getMyRequests({ status: 'في الانتظار', limit: 1 }),
             getMyRequests({ status: 'مقبول', limit: 1 }),
             getRequests({ status: 'في الانتظار', limit: 1 }),
@@ -61,6 +62,7 @@ const Dashboard = () => {
 
           setStats(prev => ({
             ...prev,
+            totalProperties: propsRes.status === 'fulfilled' ? propsRes.value.data.pagination?.totalCount || 0 : 0,
             myPending: pendingRes.status === 'fulfilled' ? pendingRes.value.data.pagination?.totalCount || 0 : 0,
             myApproved: approvedRes.status === 'fulfilled' ? approvedRes.value.data.pagination?.totalCount || 0 : 0,
             pendingRequests: reviewRes.status === 'fulfilled' ? reviewRes.value.data.pagination?.totalCount || 0 : 0,
@@ -70,7 +72,8 @@ const Dashboard = () => {
             setRecentData(recentRes.value.data.data || []);
           }
         } else {
-          const [pendingRes, approvedRes, recentRes] = await Promise.allSettled([
+          const [propsRes, pendingRes, approvedRes, recentRes] = await Promise.allSettled([
+            getProperties({ limit: 1 }),
             getMyRequests({ status: 'في الانتظار', limit: 1 }),
             getMyRequests({ status: 'مقبول', limit: 1 }),
             getMyRequests({ limit: 5 }),
@@ -78,6 +81,7 @@ const Dashboard = () => {
 
           setStats(prev => ({
             ...prev,
+            totalProperties: propsRes.status === 'fulfilled' ? propsRes.value.data.pagination?.totalCount || 0 : 0,
             myPending: pendingRes.status === 'fulfilled' ? pendingRes.value.data.pagination?.totalCount || 0 : 0,
             myApproved: approvedRes.status === 'fulfilled' ? approvedRes.value.data.pagination?.totalCount || 0 : 0,
           }));
@@ -105,12 +109,14 @@ const Dashboard = () => {
   ];
 
   const deptHeadCards = [
+    { label: 'إجمالي الملفات العقارية', value: stats.totalProperties, icon: FiFileText, color: 'bg-blue-500', path: '/properties' },
     { label: 'طلباتي المعلقة', value: stats.myPending, icon: FiActivity, color: 'bg-yellow-500', path: '/requests' },
     { label: 'طلباتي المقبولة', value: stats.myApproved, icon: FiSend, color: 'bg-green-500', path: '/requests' },
-    { label: 'طلبات معلقة للمراجعة', value: stats.pendingRequests, icon: FiSend, color: 'bg-blue-500', path: '/requests' },
+    { label: 'طلبات معلقة للمراجعة', value: stats.pendingRequests, icon: FiSend, color: 'bg-purple-500', path: '/requests' },
   ];
 
   const employeeCards = [
+    { label: 'إجمالي الملفات العقارية', value: stats.totalProperties, icon: FiFileText, color: 'bg-blue-500', path: '/properties' },
     { label: 'طلباتي المعلقة', value: stats.myPending, icon: FiActivity, color: 'bg-yellow-500', path: '/requests' },
     { label: 'طلباتي المقبولة', value: stats.myApproved, icon: FiSend, color: 'bg-green-500', path: '/requests' },
   ];

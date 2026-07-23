@@ -146,7 +146,7 @@ const update = async (userId, data) => {
  */
 const softDelete = async (userId) => {
   const result = await query(
-    'UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE user_id = $1 RETURNING user_id',
+    `UPDATE users SET deleted_at = CURRENT_TIMESTAMP, username = username || '_deleted_' || user_id || '_' || EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::bigint WHERE user_id = $1 RETURNING user_id`,
     [userId]
   );
   return result.rows[0];

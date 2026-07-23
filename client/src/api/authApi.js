@@ -3,7 +3,9 @@ import axios from 'axios';
 import { API_BASE } from '../constants';
 
 export const loginApi = async (username, password) => {
-  const { data } = await api.post('/auth/login', { username, password });
+  // Use raw axios (not interceptor-wrapped `api`) so 401 errors from wrong
+  // credentials propagate to the caller instead of triggering token-refresh.
+  const { data } = await axios.post(`${API_BASE}/auth/login`, { username, password }, { withCredentials: true });
   setAccessToken(data.data.accessToken);
   return data.data;
 };

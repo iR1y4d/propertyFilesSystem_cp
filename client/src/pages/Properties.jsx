@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { FiPlus, FiEdit, FiImage, FiDownload } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiImage, FiDownload, FiFilter } from 'react-icons/fi';
 import { useAuth } from '../hooks/useAuth';
 import { ROLES } from '../constants';
 import { getProperties, searchProperties, deleteProperty } from '../api/propertyApi';
@@ -25,6 +25,7 @@ const Properties = () => {
 
   const { page, setPage } = usePagination();
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -36,7 +37,7 @@ const Properties = () => {
   const [exportLoading, setExportLoading] = useState(false);
 
   const apiFn = useMemo(() => searchTerm ? searchProperties : getProperties, [searchTerm]);
-  const params = useMemo(() => ({ page, limit: 10, ...(searchTerm && { search: searchTerm }) }), [page, searchTerm]);
+  const params = useMemo(() => ({ page, limit: 10, ...(searchTerm && { search: searchTerm }), ...(statusFilter && { status: statusFilter }) }), [page, searchTerm, statusFilter]);
 
   const { data, setData, loading, pagination, refetch } = useFetch(apiFn, params);
 
@@ -128,7 +129,7 @@ const Properties = () => {
       render: (row) => {
         const canDirectEdit = isAdmin || isDeptHead;
         const canRequestEdit = !isAdmin;
-        const canDelete = isAdmin;
+        const canDelete = isAdmin || isDeptHead;
         return (
           <div className="flex gap-2">
             {canDirectEdit && (
@@ -157,7 +158,7 @@ const Properties = () => {
           <p className="text-gray-500 text-lg mt-2">البحث والتحكم في ملفات العقارات</p>
         </div>
 
-        {isAdmin && (
+        {(isAdmin || isDeptHead) && (
           <Button onClick={() => { setSelectedProperty(null); setIsFormOpen(true); }}>
             <FiPlus className="ml-2" />
             إضافة ملف عقاري جديد
@@ -167,6 +168,19 @@ const Properties = () => {
 
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-center">
         <SearchBar value={searchTerm} onChange={handleSearch} placeholder="البحث باسم المالك..." />
+        <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2">
+          <FiFilter className="text-gray-400" size={18} />
+          <select
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+            className="bg-transparent text-base font-medium text-gray-600 focus:outline-none cursor-pointer"
+          >
+            <option value="">جميع الحالات</option>
+            <option value="مؤقت">مؤقت</option>
+            <option value="مصدق">مصدق</option>
+            <option value="محجوز">محجوز</option>
+          </select>
+        </div>
         {data && data.length > 0 && (
           <Button variant="secondary" onClick={handleExportPdf} loading={exportLoading} className="whitespace-nowrap">
             <FiDownload className="ml-2" />
